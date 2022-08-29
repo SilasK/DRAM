@@ -795,7 +795,6 @@ def summarize_genomes(input_file, trna_path=None, rrna_path=None, output_dir='.'
                                          genomes, labels)
             liquor.save(path.join(output_dir, 'product_%s.html' % i))
         liquor_df = make_liquor_df(pd.concat(module_coverage_dfs), pd.concat(etc_coverage_dfs), pd.concat(function_dfs))
-        liquor_df.to_csv(path.join(output_dir, 'product.tsv'), sep='\t')
     else:
         module_coverage_df, etc_coverage_df, function_df = fill_liquor_dfs(annotations, module_nets,
                                                                            etc_module_df,
@@ -803,7 +802,9 @@ def summarize_genomes(input_file, trna_path=None, rrna_path=None, output_dir='.'
                                                                            groupby_column=groupby_column)
         liquor_df = make_liquor_df(module_coverage_df, etc_coverage_df, function_df)
         liquor = make_liquor_heatmap(module_coverage_df, etc_coverage_df, function_df, genome_order, None)
+        liquor = make_liquor_heatmap(module_coverage_df, etc_coverage_df, function_df, genome_order, labels)
         liquor.save(path.join(output_dir, 'product.html'))
+    liquor_df.to_csv(path.join(output_dir, 'product.tsv'), sep='\t')
     logger.info('Generated product heatmap and table')
     logger.info("Completed distillation")
 

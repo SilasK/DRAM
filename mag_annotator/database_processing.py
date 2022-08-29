@@ -37,7 +37,6 @@ from mag_annotator.fegenie_kit import process as process_fegenie_tar_gz
 from mag_annotator.fegenie_kit import DOWNLOAD_OPTIONS as FEGENIE_DOWNLOAD_OPTIONS
 from mag_annotator.fegenie_kit import PROCESS_OPTIONS as FEGENIE_PROCESS_OPTIONS
 from mag_annotator.fegenie_kit import DRAM_SETTINGS as FEGENIE_DRAM_SETTINGS
-from mag_annotator.sulphur_kit import download as download_sulphur_tar_gz
 from mag_annotator.sulphur_kit import process as process_sulphur_tar_gz
 from mag_annotator.sulphur_kit import DOWNLOAD_OPTIONS as SULPHUR_DOWNLOAD_OPTIONS
 from mag_annotator.sulphur_kit import PROCESS_OPTIONS as SULPHUR_PROCESS_OPTIONS

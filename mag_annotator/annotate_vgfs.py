@@ -1,3 +1,6 @@
+"""
+Main control point for the viral annotation process
+"""
 from datetime import datetime
 from os import path, mkdir
 import re
@@ -281,7 +284,7 @@ def calculate_auxiliary_scores(gene_order):
 
 
 def get_metabolic_flags(annotations, metabolic_genes, amgs, verified_amgs, scaffold_length_dict,
-                        length_from_end=5000):
+                        logger, length_from_end=5000):
     flag_dict = dict()
     metabolic_genes = set(metabolic_genes)
     for scaffold, scaffold_annotations in annotations.groupby('scaffold'):
@@ -346,7 +349,9 @@ def get_amg_ids(amg_frame):
     ko_amgs = {j.strip() for i in amg_frame['KO'].dropna() for j in i.strip().split(';')}
     ec_amgs = {j.strip() for i in amg_frame['EC'].dropna() for j in i.strip().split(';')}
     pfam_amgs = {j.strip() for i in amg_frame['PFAM'].dropna() for j in i.strip().split(';')}
-    return ko_amgs | ec_amgs | pfam_amgs
+    # Put this back in once python 3.10 is more popular
+    #return ko_amgs | ec_amgs | pfam_amgs
+    return ko_amgs.union(ec_amgs, pfam_amgs)
 
 
 def get_virsorter2_affi_contigs_name(scaffold):
@@ -378,7 +383,7 @@ def get_virsorter_affi_contigs_name(scaffold):
     return get_virsorter_original_affi_contigs_name(scaffold)
 
 
-def add_dramv_scores_and_flags(annotations, db_handler, virsorter_hits=None, input_fasta=None):
+def add_dramv_scores_and_flags(annotations, db_handler, logger, virsorter_hits=None, input_fasta=None):
     # setting up scoring viral genes
     amg_database_frame = pd.read_csv(db_handler.config['dram_sheets']['amg_database'], sep='\t')
     genome_summary_form = pd.read_csv(db_handler.config['dram_sheets']['genome_summary_form'], sep='\t', index_col=0)
@@ -409,7 +414,8 @@ def add_dramv_scores_and_flags(annotations, db_handler, virsorter_hits=None, inp
     amgs = get_amg_ids(amg_database_frame)
     verified_amgs = get_amg_ids(amg_database_frame.loc[amg_database_frame.verified])
     annotations['amg_flags'] = pd.Series(get_metabolic_flags(annotations, metabolic_genes, amgs,
-                                                             verified_amgs, scaffold_length_dict))
+                                                             verified_amgs, scaffold_length_dict,
+                                                             logger))
 
     # downgrade B flag auxiliary scores
     if virsorter_hits is not None:
@@ -482,7 +488,7 @@ def annotate_vgfs(input_fasta, virsorter_affi_contigs=None, output_dir='.', min_
                                   skip_trnascan, rename_bins, keep_tmp_dir, threads, verbose)
     logging.info('Annotations complete, assigning auxiliary scores and flags')
 
-    annotations = add_dramv_scores_and_flags(annotations, db_handler, virsorter_hits, input_fasta)
+    annotations = add_dramv_scores_and_flags(annotations, db_handler, logger, virsorter_hits, input_fasta)
 
     # write annotations
     annotations.to_csv(path.join(output_dir, 'annotations.tsv'), sep='\t')

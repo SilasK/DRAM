@@ -1,4 +1,4 @@
-from os import path, remove
+from os import path, remove, getenv
 from pkg_resources import resource_filename
 import json
 import gzip
@@ -31,7 +31,11 @@ DATABASE_DESCRIPTIONS = ('pfam_hmm', 'dbcan_fam_activities', 'vog_annotations')
 
 
 def get_config_loc():
-    return path.abspath(resource_filename('mag_annotator', 'CONFIG'))
+    loc = getenv('DRAM_CONFIG_LOCATION')
+    if loc:
+        return loc
+    else:
+        return path.abspath(resource_filename('mag_annotator', 'CONFIG'))
 
 
 def clear_dict(val):
@@ -227,7 +231,6 @@ class DatabaseHandler:
                   'vog_annotations': vog_annotations_loc,
                 },
                 "dram_sheets": {
-                  'camper_distillate': camper_distillate_loc,
                   'genome_summary_form': genome_summary_form_loc,
                   'module_step_form': module_step_form_loc,
                   'etc_module_database': etc_module_database_loc,
@@ -362,10 +365,11 @@ class DatabaseHandler:
                 datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
             self.logger.info(f'Description updated for the {db_name} database')
         # fill database
-        mmseqs_database= ['kegg', 'uniref',  'viral', 'peptidase']
+        mmseqs_database = ['kegg', 'uniref',  'viral', 'peptidase']
         process_functions = {i:partial(self.make_header_dict_from_mmseqs_db, 
                                        self.config['search_databases'][i]) 
-                             for i in mmseqs_database}
+                             for i in mmseqs_database
+                             if self.config['search_databases'][i] is not None}
         # Use table names
         process_functions.update({
             'pfam': partial(self.process_pfam_descriptions,
@@ -433,6 +437,7 @@ def set_database_paths(clear_config=False, update_description_db=False, **kargs)
     if update_description_db:
         db_handler.populate_description_db()
 
+
 def print_database_locations(config_loc=None):
     conf = DatabaseHandler(None, config_loc)
     # search databases
@@ -468,6 +473,7 @@ def print_database_locations(config_loc=None):
     print('Function heatmap form: %s' % conf.config.get('dram_sheets').get('function_heatmap_form'))
     print('CAMPER Distillate form: %s' % conf.config.get('dram_sheets').get('camper_distillate'))
     print('AMG database: %s' % conf.config.get('dram_sheets').get('amg_database'))
+
 
 def print_database_settings(config_loc=None):
     conf = DatabaseHandler(None, config_loc)

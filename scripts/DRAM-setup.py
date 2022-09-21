@@ -122,8 +122,8 @@ if __name__ == '__main__':
     set_db_locs_parser.add_argument('--fegenie_tar_gz_loc', default=None,
                                     help='The source for the FeGenie database files, this is a tar.gz file downloaded'
                                     ' from the release page https://github.com/Arkadiy-Garber/FeGenie/releases')
-    set_db_locs_parser.add_argument('--sulphur_tar_gz_loc', default=None, 
-                                    help='This is the tar.gz for the Sulphur db, get it from the  github releases page')
+    set_db_locs_parser.add_argument('--sulfur_tar_gz_loc', default=None, 
+                                    help='This is the tar.gz for the Sulfur db, get it from the  github releases page')
 
     set_db_locs_parser.add_argument('--viral_refseq_loc', default=None,
                                     help='mmseqs2 database file from ref seq viral gene collection')

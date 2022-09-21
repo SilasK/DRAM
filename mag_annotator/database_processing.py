@@ -25,10 +25,10 @@ from mag_annotator.fegenie_kit import process as process_fegenie_tar_gz
 from mag_annotator.fegenie_kit import DOWNLOAD_OPTIONS as FEGENIE_DOWNLOAD_OPTIONS
 from mag_annotator.fegenie_kit import PROCESS_OPTIONS as FEGENIE_PROCESS_OPTIONS
 from mag_annotator.fegenie_kit import DRAM_SETTINGS as FEGENIE_DRAM_SETTINGS
-from mag_annotator.sulphur_kit import process as process_sulphur_tar_gz
-from mag_annotator.sulphur_kit import DOWNLOAD_OPTIONS as SULPHUR_DOWNLOAD_OPTIONS
-from mag_annotator.sulphur_kit import PROCESS_OPTIONS as SULPHUR_PROCESS_OPTIONS
-from mag_annotator.sulphur_kit import DRAM_SETTINGS as SULPHUR_DRAM_SETTINGS
+from mag_annotator.sulfur_kit import process as process_sulfur_tar_gz
+from mag_annotator.sulfur_kit import DOWNLOAD_OPTIONS as SULFUR_DOWNLOAD_OPTIONS
+from mag_annotator.sulfur_kit import PROCESS_OPTIONS as SULFUR_PROCESS_OPTIONS
+from mag_annotator.sulfur_kit import DRAM_SETTINGS as SULFUR_DRAM_SETTINGS
 
 NUMBER_OF_VIRAL_FILES = 2
 # DEFAULT_DBCAN_RELEASE = '11'

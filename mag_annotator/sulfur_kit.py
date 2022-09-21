@@ -12,28 +12,28 @@ from mag_annotator.utils import download_file, run_process, make_mmseqs_db, \
 
 
 VERSION = '1.2'
-NAME = 'Sulphur'
+NAME = 'Sulfur'
 
 CITATION = "Li W, O'Neill KR, Haft DH, DiCuccio M, Chetvernin V, Badretdin A, Coulouris G, Chitsaz F, Derbyshire MK, Durkin AS, Gonzales NR, Gwadz M, Lanczycki CJ, Song JS, Thanki N, Wang J, Yamashita RA, Yang M, Zheng C, Marchler-Bauer A, Thibaud-Nissen F. RefSeq: expanding the Prokaryotic Genome Annotation Pipeline reach with protein family model curation. Nucleic Acids Res. 2021 Jan 8;49(D1):D1020-D1028. doi: 10.1093/nar/gkaa1105. PMID: 33270901; PMCID: PMC7779008."
-DOWNLOAD_OPTIONS ={'sulphur_tar_gz': {'version': VERSION}}
-PROCESS_OPTIONS ={'sulphur_tar_gz': {'version': VERSION}}
-DRAM_SETTINGS = {'sulphur_hmm': {'name': 'Sulphur placeholder', 'citation': CITATION,
-                                 'notes': "This is just fegenie_hmm pretending to be sulphur."},
+DOWNLOAD_OPTIONS ={'sulfur_tar_gz': {'version': VERSION}}
+PROCESS_OPTIONS ={'sulfur_tar_gz': {'version': VERSION}}
+DRAM_SETTINGS = {'sulfur_hmm': {'name': 'Sulfur placeholder', 'citation': CITATION,
+                                 'notes': "This is just fegenie_hmm pretending to be sulfur."},
                  }
 
 def process(input_file, output_dir, logger, threads=1,  version=VERSION, verbose=False) -> dict:
     # this is the path within the tar file
     final_paths ={
-        "sulphur_hmm"      : path.join(output_dir, 
+        "sulfur_hmm"      : path.join(output_dir, 
                                        f"{NAME}-{version}", f"{name}_hmm.hmm"),
     }
-    if not path.exists(path.dirname(final_paths['sulphur_hmm'])):
-        mkdir(path.dirname(final_paths['sulphur_hmm']))
+    if not path.exists(path.dirname(final_paths['sulfur_hmm'])):
+        mkdir(path.dirname(final_paths['sulfur_hmm']))
     # move and concatanate hmm to location
-    move(input_file, final_paths["sulphur_hmm"])
+    move(input_file, final_paths["sulfur_hmm"])
     
     # build dbs
-    run_process(['hmmpress', '-f', final_paths["sulphur_hmm"]], logger, verbose=verbose)  # all are pressed just in case
+    run_process(['hmmpress', '-f', final_paths["sulfur_hmm"]], logger, verbose=verbose)  # all are pressed just in case
     return final_paths
 
 # TODO check this
@@ -65,11 +65,11 @@ def hmmscan_formater(hits:pd.DataFrame, logger:logging.Logger, db_name:str, top_
     return hits_df
 
 
-def search(genes_faa:str, tmp_dir:str, sulphur_hmm:str,  
+def search(genes_faa:str, tmp_dir:str, sulfur_hmm:str,  
            logger:logging.Logger, threads:int, db_name:str=NAME, top_hit:bool=True, 
            verbose:bool=True):
   return run_hmmscan(genes_faa=genes_faa,
-                     db_loc=sulphur_hmm,
+                     db_loc=sulfur_hmm,
                      db_name=NAME,
                      threads=threads,
                      output_loc=tmp_dir,
@@ -84,7 +84,7 @@ def search(genes_faa:str, tmp_dir:str, sulphur_hmm:str,
 # def search(query_db:str, gene_faa:str, tmp_dir:str, logger:logging.Logger, 
 #            threads:str, verbose:str, db_handler, **args):
 #     return run_hmmscan(genes_faa=gene_faa,
-#                        db_loc=db_handler.config["search_databases"]['sulphur_hmm']['location'],
+#                        db_loc=db_handler.config["search_databases"]['sulfur_hmm']['location'],
 #                        db_name=NAME,
 #                        threads=threads,
 #                        output_loc=tmp_dir,

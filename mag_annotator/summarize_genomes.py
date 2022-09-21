@@ -16,7 +16,7 @@ from mag_annotator.database_handler import DatabaseHandler
 from mag_annotator.utils import get_ordered_uniques, setup_logger
 from mag_annotator.camper_kit import NAME as CAMPER_NAME
 from mag_annotator.fegenie_kit import NAME as FEGENIE_NAME
-from mag_annotator.sulphur_kit import NAME as SULPHUR_NAME
+from mag_annotator.sulfur_kit import NAME as SULFUR_NAME
 
 # TODO: add RBH information to output
 # TODO: add flag to output table and not xlsx
@@ -59,7 +59,6 @@ ID_FUNCTION_DICT = {
     'camper_id': lambda x: [x],
     'fegenie_id': lambda x: [x],
     'sulfur_id': lambda x: [x],
-    'Sulphur_id': lambda x: [x], # Legacy # Legacy of stupid
     'methyl_id': lambda x: [i.split(' ')[0].strip() for i in x.split(',')]
 }
 
@@ -67,9 +66,9 @@ ID_FUNCTION_DICT = {
 def check_columns(data, logger):
     functions = {i:j for i,j in ID_FUNCTION_DICT.items() if i in data.columns}
     missing = [i for i in ID_FUNCTION_DICT if i not in data.columns]
-    logger.info("Note: the fallowing id fields "
-          f"were not in the annotations file and are not being used: {missing},"
-          f" but these are {list(functions.keys())}")
+    logger.info("Note: the following id fields "
+                f"were not in the annotations file and are not being used: {missing},"
+                f" but these are {list(functions.keys())}")
 
 
 def get_ids_from_annotations_by_row(data):
@@ -683,9 +682,9 @@ def summarize_genomes(input_file, trna_path=None, rrna_path=None, output_dir='.'
         else:
             genome_summary_form = pd.concat([
                 genome_summary_form, pd.read_csv(database_handler.config["dram_sheets"], sep='\t')])
-    if f"{SULPHUR_NAME}_id" in annotations:
-        if 'sulphur_distillate' not in database_handler.config["dram_sheets"]:
-            logger.warn(f"Genome summary form location for {SULPHUR_NAME} "
+    if f"{SULFUR_NAME}_id" in annotations:
+        if 'sulfur_distillate' not in database_handler.config["dram_sheets"]:
+            logger.warn(f"Genome summary form location for {SULFUR_NAME} "
                          "must be set in order to summarize genomes with this database.")
         else:
             genome_summary_form = pd.concat([

@@ -15,8 +15,8 @@
     "camper_fa_db_cutoffs": "/home/projects-wrighton-2/DRAM/dram_data/dram1.4_testing/CAMPER_blast_scores.tsv",
     "fegenie_hmm": "/home/projects-wrighton-2/DRAM/dram_data/dram1.4_testing/fegenie_iron_oxidation_reduction.hmm",
     "fegenie_cutoffs": "/home/projects-wrighton-2/DRAM/dram_data/dram1.4_testing/fegenie_iron_cut_offs.txt",
-    "sulphur_hmm": "/home/projects-wrighton-2/DRAM/dram_data/dram1.4_testing/fegenie_iron_oxidation_reduction.hmm",
-    "sulphur_cutoffs": "/home/projects-wrighton-2/DRAM/dram_data/dram1.4_testing/fegenie_iron_cut_offs.txt"
+    "sulfur_hmm": "/home/projects-wrighton-2/DRAM/dram_data/dram1.4_testing/fegenie_iron_oxidation_reduction.hmm",
+    "sulfur_cutoffs": "/home/projects-wrighton-2/DRAM/dram_data/dram1.4_testing/fegenie_iron_cut_offs.txt"
   },
   "database_descriptions": {
     "pfam_hmm": "/home/projects-wrighton-2/DRAM/dram_data/dram1.4_testing/Pfam-A.hmm.dat.gz",
@@ -209,16 +209,16 @@
       "description_db_updated": "06/28/2022, 18:06:34",
       "citation": "Kanehisa, M., Furumichi, M., Sato, Y., Ishiguro-Watanabe, M., and Tanabe, M.; KEGG: integrating viruses and cellular organisms. Nucleic Acids Res. 49, D545-D551 (2021)."
     },
-    "sulphur_hmm": {
-      "name": "Sulphur placeholder",
+    "sulfur_hmm": {
+      "name": "Sulfur placeholder",
       "citation": "None",
-      "notes": "This is just fegenie_hmm pretending to be sulphur.",
+      "notes": "This is just fegenie_hmm pretending to be sulfur.",
       "version": "1.2",
       "Download time": "07/07/2022, 17:15:25",
       "Origin": "Downloaded by DRAM"
     },
-    "sulphur_cutoffs": {
-      "name": "Sulphur cutoffs",
+    "sulfur_cutoffs": {
+      "name": "Sulfur cutoffs",
       "citation": "None",
       "version": "1.2",
       "Download time": "07/07/2022, 17:15:25",

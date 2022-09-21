@@ -16,45 +16,22 @@ from os import path, mkdir, stat
 from shutil import rmtree, copy2
 import pandas as pd
 
-# TODO Exceptions are not fully handled
-# TODO Distillate sheets is part of the config, drop it
-
-
 from mag_annotator.utils import run_process, make_mmseqs_db, merge_files, \
     multigrep, remove_suffix, setup_logger, run_hmmscan, sig_scores, get_sig_row, \
     generic_hmmscan_formater, get_reciprocal_best_hits, get_best_hits, BOUTFMT6_COLUMNS
 from mag_annotator.database_handler import DatabaseHandler
 from mag_annotator.fasta_dup_name_test import fastas_dup_check
+
+MAG_DBS_TO_ANNOTATE = ('kegg', 'kofam_hmm', 'kofam_ko_list', 'uniref', 'peptidase', 'pfam', 'dbcan', 'vogdb') 
+
 # TODO: add ability to take into account multiple best hits as in old_code.py
 # TODO: add silent mode
 # TODO: add abx resistance genes
 # TODO: in annotated gene faa checkout out ko id for actual kegg gene id
 # TODO: add ability to handle [] in file names
+# TODO Exceptions are not fully handled
+# TODO Distillate sheets is part of the config, drop it
 
-MAG_DBS_TO_ANNOTATE = ('kegg', 'kofam_hmm', 'kofam_ko_list', 'uniref', 'peptidase', 'pfam', 'dbcan', 'vogdb') 
-
-"""
-import os
-
-os.system("DRAM.py strainer -i ./strainer.tsv -f genes.faa")
- 
-os.system("rm -r test_small viral_tests")
-os.system("DRAM-v.py annotate -i ../../scratch_space_flynn/jul_21_22_issue162_dramv/final-viral-combined-for-dramv.fa -v ../../scratch_space_flynn/jul_21_22_issue162_dramv/viral-affi-contigs-for-dramv.tab -o viral_tests")
-
-os.system("DRAM.py annotate_genes -i /home/projects-wrighton-2/DRAM/development_flynn/release_validation/data_sets/mini_data/small.faa -o test_small --use_camper --use_fegenie --use_sulphur --use_vogdb")
-os.system("DRAM.py annotate_bins -i /home/projects-wrighton-2/DRAM/development_flynn/release_validation/data_sets/mini_data/small.faa --use_fegenie --use_camper --use_sulphur -o test_small")
-
-os.system("/home/projects-wrighton-2/GROWdb/Yojoa_Hall/All_Med_High_bins/DRAM_merged")
-os.system("DRAM.py merge_annotations -i /home/projects-wrighton-2/GROWdb/Yojoa_Hall/All_Med_High_bins/DRAM_per_bin/ -o /home/projects-wrighton-2/GROWdb/Yojoa_Hall/All_Med_High_bins/DRAM_merged")
-
-os.system("DRAM-setup.py update_description_db")
-os.system("DRAM-setup.py import_config --config_loc ../../snapshot/DRAM1_4/mag_annotator/CONFIG")
-os.system("rm -r test_small ")
-os.system("rm -r ")
-os.system("DRAM.py annotate -i '../release_validation/data_sets/split_data_pour_water/*.fa' -o output_DRAM_drepped_pw_1.4.0 --min_contig_size 2500 --threads 65 --use_uniref --use_camper --use_fegenie --use_sulphur --use_vogdb")
-os.system("DRAM.py annotate_genes --threads 64 -i /home/projects-wrighton-2/DRAM/input_datasets/camper_test_data/genes.faa --use_fegenie --use_camper --use_sulphur -o test_small")
-os.system("DRAM.py annotate -i /home/projects-wrighton-2/DRAM/input_datasets/SoilGenomess/Cytophaga_hutchinsonii_ATCC_33406.fasta --use_fegenie --use_camper --use_sulphur -o soil_part")
-"""
 
 def filter_fasta(fasta_loc, min_len=5000, output_loc=None):
     """Removes sequences shorter than a set minimum from fasta files, outputs an object or to a file"""
@@ -951,7 +928,7 @@ def annotate_fastas(fasta_locs, output_dir, db_handler, logger, min_contig_size=
 
 def make_fasta_namses_df(fasta_loc):
     fasta_name = get_fasta_name(fasta_loc)
-    names = [{'fasta': fasta_name, 'seq': seq.metadata['id']} for seq in read_sequence(fasta_loc, format='fasta')]
+    names = [{'fasta': fasta_name, 'seq': seq.metadata['id']} for seq in read_sequence(fasta_loc,format='fasta')]
     return pd.DataFrame(names)
 
 
@@ -994,14 +971,6 @@ def annotate_fastas_as_one(fasta_locs, output_dir, db_handler, logger, min_conti
     return all_annotations
 
 
-# def annotate_bins_cmd(input_fasta, output_dir='.', min_contig_size=5000, prodigal_mode='meta', trans_table='11',
-#                       bit_score_threshold=60, rbh_bit_score_threshold=350, custom_db_name=(), custom_fasta_loc=(),
-#                       custom_hmm_name=(), custom_hmm_loc=(), custom_hmm_cutoffs_loc=(), use_uniref=False, 
-#                       use_camper=False, use_fegenie=False, use_sulphur=False,  use_vogdb=False, kofam_use_dbcan2_thresholds=False, 
-#                       skip_trnascan=False, gtdb_taxonomy=(), checkm_quality=(),
-#                       keep_tmp_dir=True, low_mem_mode=False, threads=10, verbose=True):
-
-
 # TODO: Add force flag to remove output dir if it already exists
 # TODO: Add continute flag to continue if output directory already exists
 # TODO: make fasta loc either a string or list to remove annotate_bins_cmd and annotate_called_genes_cmd?
@@ -1011,12 +980,12 @@ def annotate_bins(input_fasta:list, output_dir='.', min_contig_size=2500, prodig
                   use_camper=False, use_fegenie=False, use_sulphur=False, use_vogdb=False, kofam_use_dbcan2_thresholds=False, 
                   skip_trnascan=False, gtdb_taxonomy=(), checkm_quality=(),
                   rename_bins=True, keep_tmp_dir=True, low_mem_mode=False, threads=10, verbose=True, 
-                  log_file_path:str=None, join_fastas:bool=False):
+                  log_file_path:str=None, join_fastas:bool=False, config_loc:str=None):
     rename_bins = True
     fasta_locs = [j for i in input_fasta for j in glob(i)]
     mkdir(output_dir)
     if log_file_path is None:
-        log_file_path = path.join(output_dir, "Annotation.log")
+        log_file_path = path.join(output_dir, "annotate_bins.log")
     logger = logging.getLogger('annotation_log')
     setup_logger(logger, log_file_path)
     logger.info(f"The log file is created at {log_file_path}.")
@@ -1030,7 +999,7 @@ def annotate_bins(input_fasta:list, output_dir='.', min_contig_size=2500, prodig
     # set up
     db_handler = DatabaseHandler(logger)
     db_handler.filter_db_locs(low_mem_mode, use_uniref, use_camper, use_fegenie, use_sulphur,
-                              use_vogdb, master_list=MAG_DBS_TO_ANNOTATE)
+                              use_vogdb, master_list=MAG_DBS_TO_ANNOTATE,)
     db_conf = db_handler.get_settings_str()
     logger.info(f"Starting the Annotation of Bins with database configuration: \n {db_conf}")
 
@@ -1103,13 +1072,15 @@ def annotate_called_genes_cmd(input_faa, output_dir='.', bit_score_threshold=60,
                               custom_hmm_cutoffs_loc=(), use_uniref=False, use_camper=False, use_fegenie=False, 
                               use_sulphur=False, log_file_path:str=None,
                               use_vogdb=False, kofam_use_dbcan2_thresholds=False, rename_genes=True, 
-                              keep_tmp_dir=True, low_mem_mode=False, threads=10, verbose=True):
+                              keep_tmp_dir=True, low_mem_mode=False, threads=10, verbose=True, 
+                              config_loc:str=None):
     fasta_locs = glob(input_faa)
     annotate_called_genes(fasta_locs, output_dir, bit_score_threshold, rbh_bit_score_threshold, 
                           custom_db_name, custom_fasta_loc, custom_hmm_loc, custom_hmm_name, 
                           custom_hmm_cutoffs_loc, use_uniref, use_camper, use_fegenie, 
                           use_sulphur, use_vogdb, kofam_use_dbcan2_thresholds, 
-                          rename_genes, keep_tmp_dir, low_mem_mode, threads, verbose)
+                          rename_genes, keep_tmp_dir, low_mem_mode, threads, verbose,
+                          config_loc)
 
 def perform_fasta_checks(fasta_locs, logger):
     """Perform all checks related to integrity of fastas"""
@@ -1132,7 +1103,7 @@ def annotate_called_genes(fasta_locs, output_dir='.', bit_score_threshold=60, rb
                           custom_hmm_cutoffs_loc=(), use_uniref=False, use_camper=False, use_fegenie=False,  
                           use_sulphur=False,
                           use_vogdb=False, kofam_use_dbcan2_thresholds=False, rename_genes=True, keep_tmp_dir=True, 
-                          low_mem_mode=False, threads=10, verbose=True, log_file_path:str=None):
+                          low_mem_mode=False, threads=10, verbose=True, log_file_path:str=None, config_loc:str=None):
     mkdir(output_dir)
 
     # Get a logger
@@ -1142,7 +1113,7 @@ def annotate_called_genes(fasta_locs, output_dir='.', bit_score_threshold=60, rb
     setup_logger(logger, log_file_path)
     logger.info(f"The log file is created at {log_file_path}")
     # get database locations
-    db_handler = DatabaseHandler(logger)
+    db_handler = DatabaseHandler(logger, config_loc)
     db_handler.filter_db_locs(low_mem_mode, use_uniref, use_camper, use_fegenie,
                               use_sulphur, use_vogdb, master_list=MAG_DBS_TO_ANNOTATE)
     
@@ -1246,7 +1217,6 @@ def merge_annotations(annotations_list, output_dir, write_annotations=False):
 def merge_annotations_cmd(input_dirs, output_dir):
 
     mkdir(output_dir)
-    
     # Get a logger
     annotations_list = list()
     log_file_path = path.join(output_dir, "Annotation.log")
@@ -1279,3 +1249,4 @@ def merge_annotations_cmd(input_dirs, output_dir):
                                            gff=gff, gbk=gbk, annotations=annotations, trnas=trnas, rrnas=rrnas))
     # run merge_annotations
     merge_annotations(annotations_list, output_dir, write_annotations=True)
+

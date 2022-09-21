@@ -1,3 +1,6 @@
+"""
+Main control point for the viral annotation process
+"""
 from datetime import datetime
 from os import path, mkdir
 import re
@@ -291,7 +294,7 @@ def get_metabolic_flags(annotations, metabolic_genes, amgs, verified_amgs, scaff
         for gene, row in scaffold_annotations.iterrows():
             # set up
             flags = ''
-            gene_annotations = set(get_ids_from_annotations_all(pd.DataFrame(row).transpose(), logger).keys())  # TODO: Fix
+            gene_annotations = set(get_ids_from_annotations_all(pd.DataFrame(row).transpose()).keys())  # TODO: Fix
             # is viral
             if 'vogdb_categories' in row.index and not pd.isna(row['vogdb_categories']):
                 if len({'Xr', 'Xs'} & set(row['vogdb_categories'].split(';'))) > 0:

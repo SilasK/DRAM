@@ -1,4 +1,4 @@
-from os import path, remove
+from os import path, remove, getenv
 from pkg_resources import resource_filename
 import json
 import gzip
@@ -31,7 +31,11 @@ DATABASE_DESCRIPTIONS = ('pfam_hmm', 'dbcan_fam_activities', 'vog_annotations')
 
 
 def get_config_loc():
-    return path.abspath(resource_filename('mag_annotator', 'CONFIG'))
+    loc = getenv('DRAM_CONFIG_LOCATION')
+    if loc:
+        return loc
+    else:
+        return path.abspath(resource_filename('mag_annotator', 'CONFIG'))
 
 
 def clear_dict(val):
@@ -355,10 +359,11 @@ class DatabaseHandler:
                 datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
             self.logger.info(f'Description updated for the {db_name} database')
         # fill database
-        mmseqs_database= ['kegg', 'uniref',  'viral', 'peptidase']
+        mmseqs_database = ['kegg', 'uniref',  'viral', 'peptidase']
         process_functions = {i:partial(self.make_header_dict_from_mmseqs_db, 
                                        self.config['search_databases'][i]) 
-                             for i in mmseqs_database}
+                             for i in mmseqs_database
+                             if self.config['search_databases'][i] is not None}
         # Use table names
         process_functions.update({
             'pfam': partial(self.process_pfam_descriptions,
@@ -378,8 +383,8 @@ class DatabaseHandler:
         if update_config:  # if new description db is set then save it
             self.write_config()
 
-    def filter_db_locs(self, low_mem_mode=False, use_uniref=True, 
-                       use_vogdb=True, master_list=None):
+    def filter_db_locs(self, low_mem_mode=False, use_uniref=True, use_camper=True, use_fegenie=True, 
+                       use_sulphur=True, use_vogdb=True, master_list=None):
         if master_list is None:
             dbs_to_use = self.config['search_databases'].keys()
         else:
@@ -395,6 +400,12 @@ class DatabaseHandler:
                 warnings.warn('Sequences will not be annoated against uniref as it is not configured for use in DRAM')
         else:
             dbs_to_use = [i for i in dbs_to_use if i != 'uniref']
+        if not use_camper:
+            dbs_to_use = [i for i in dbs_to_use if 'camper' not in i]
+        if not use_fegenie:
+            dbs_to_use = [i for i in dbs_to_use if 'fegenie' not in i]
+        if not use_sulphur:
+            dbs_to_use = [i for i in dbs_to_use if 'sulphur' not in i]
         # check on vogdb status
         if use_vogdb:
             if 'vogdb' not in self.config.get('search_databases'):
@@ -426,6 +437,7 @@ def set_database_paths(clear_config=False, update_description_db=False, **kargs)
     if update_description_db:
         db_handler.populate_description_db()
 
+
 def print_database_locations(config_loc=None):
     conf = DatabaseHandler(None, config_loc)
     # search databases
@@ -439,6 +451,10 @@ def print_database_locations(config_loc=None):
     print('RefSeq Viral db: %s' % conf.config.get('search_databases').get('viral'))
     print('MEROPS peptidase db: %s' % conf.config.get('search_databases').get('peptidase'))
     print('VOGDB db: %s' % conf.config.get('search_databases').get('vogdb'))
+    print('CAMPER HMM db: %s' % conf.config.get('search_databases').get('camper_hmm'))
+    print('CAMPER FASTA db: %s' % conf.config.get('search_databases').get('camper_fa_db'))
+    print('CAMPER HMM cutoffs: %s' % conf.config.get('search_databases').get('camper_hmm_cutoffs'))
+    print('CAMPER FASTA cutoffs: %s' % conf.config.get('search_databases').get('camper_fa_db_cutoffs'))
     print()
     # database descriptions used during description db population
     print('Descriptions of search database entries')
@@ -455,7 +471,9 @@ def print_database_locations(config_loc=None):
     print('Module step form: %s' % conf.config.get('dram_sheets').get('module_step_form'))
     print('ETC module database: %s' % conf.config.get('dram_sheets').get('etc_module_database'))
     print('Function heatmap form: %s' % conf.config.get('dram_sheets').get('function_heatmap_form'))
+    print('CAMPER Distillate form: %s' % conf.config.get('dram_sheets').get('camper_distillate'))
     print('AMG database: %s' % conf.config.get('dram_sheets').get('amg_database'))
+
 
 def print_database_settings(config_loc=None):
     conf = DatabaseHandler(None, config_loc)

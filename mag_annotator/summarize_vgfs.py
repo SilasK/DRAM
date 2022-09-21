@@ -1,15 +1,19 @@
-import pandas as pd
-import altair as alt
+"""DRAM-v distillation functions"""
 import re
 from os import path, mkdir
 from functools import partial
 from collections import defaultdict, Counter
 from datetime import datetime
 import warnings
+import logging
+
+import pandas as pd
+import altair as alt
 
 from mag_annotator.database_handler import DatabaseHandler
+from mag_annotator.utils import setup_logger
 from mag_annotator.summarize_genomes import get_ids_from_annotations_by_row, \
-    get_ids_from_annotations_all, get_ordered_uniques
+    get_ids_from_annotations_all, get_ordered_uniques, check_columns
 
 VOGDB_TYPE_NAMES = {'Xr': 'Viral replication genes', 'Xs': 'Viral structure genes',
                     'Xh': 'Viral genes with host benefits', 'Xp': 'Viral genes with viral benefits',
@@ -99,7 +103,7 @@ def make_viral_stats_table(annotations, potential_amgs, groupby_column='scaffold
         gene_counts = Counter([i.split(';')[0] for i in frame.vogdb_categories.replace('', 'Xx')])
         named_gene_counts = {VOGDB_TYPE_NAMES[key]: value for key, value in gene_counts.items()}
         gene_counts_series = pd.Series(named_gene_counts, name=scaffold)
-        viral_stats_series.append(virus_data.append(gene_counts_series))
+        viral_stats_series.append(pd.concat([virus_data, gene_counts_series]))
     return pd.DataFrame(viral_stats_series).fillna(0)
 
 
@@ -210,11 +214,10 @@ def make_viral_functional_heatmap(functional_df, vgf_order=None):
     return function_heatmap
 
 
-# def summarize_vgfs(input_file, output_dir, groupby_column='scaffold', max_auxiliary_score=3, remove_transposons=False,
-#                    remove_fs=False, remove_js=False, custom_distillate=None):
 def summarize_vgfs(input_file, output_dir, groupby_column='scaffold', max_auxiliary_score=3,
-                   remove_transposons=False, remove_fs=False, custom_distillate=None):
+                   remove_transposons=False, remove_fs=False, custom_distillate=None, log_file_path:str=None):
     # make output folder
+    
     mkdir(output_dir)
     if log_file_path is None:
         log_file_path = path.join(output_dir, "Distillation.log")
@@ -225,11 +228,11 @@ def summarize_vgfs(input_file, output_dir, groupby_column='scaffold', max_auxili
 
     # set up
     annotations = pd.read_csv(input_file, sep='\t', index_col=0).fillna('')
-    database_handler = DatabaseHandler()
-    if database_handler.dram_sheet_locs.get('genome_summary_form') is None:
+    check_columns(annotations, logger)
+    database_handler = DatabaseHandler(logger)
+    if database_handler.config["dram_sheets"].get('genome_summary_form') is None:
         raise ValueError('Genome summary form location must be set in order to summarize genomes')
-    mkdir(output_dir)
-    genome_summary_form = pd.read_csv(database_handler.dram_sheet_locs['genome_summary_form'], sep='\t', index_col=0)
+    genome_summary_form = pd.read_csv(database_handler.config['dram_sheets']['genome_summary_form'], sep='\t', index_col=0)
     if custom_distillate is not None:
         custom_distillate_form = pd.read_csv(custom_distillate, sep='\t', index_col=0)
         genome_summary_form = pd.concat([genome_summary_form, custom_distillate_form])
@@ -258,6 +261,7 @@ def summarize_vgfs(input_file, output_dir, groupby_column='scaffold', max_auxili
     amg_column = make_amg_count_column(potential_amgs, vgf_order)
     viral_function_df = make_viral_functional_df(potential_amgs, genome_summary_form, groupby_column=groupby_column)
     viral_functional_heatmap = make_viral_functional_heatmap(viral_function_df, vgf_order)
-    alt.hconcat(amg_column, viral_functional_heatmap, spacing=5).save(path.join(output_dir, 'product.html'))
+    product = alt.hconcat(amg_column, viral_functional_heatmap, spacing=5)
+    product.save(path.join(output_dir, 'product.html'))
     logger.info('Generated product heatmap')
     logger.info("Completed distillation")

@@ -1,9 +1,9 @@
 {
   "search_databases": {
-    "kegg": "/home/projects-wrighton-2/DRAM/development_flynn/snapshot/DRAM1_4/kegg.20220628.mmsdb",
+    "kegg": "/home/projects-wrighton-2/DRAM/dbs_20220920_just_kegg/kegg.20220921.mmsdb",
     "kofam_hmm": "/home/projects-wrighton-2/DRAM/dram_data/dram1.4_testing/kofam_profiles.hmm",
     "kofam_ko_list": "/home/projects-wrighton-2/DRAM/dram_data/dram1.4_testing/kofam_ko_list.tsv",
-    "uniref": "/home/projects-wrighton-2/DRAM/dram_data/dram1.4_testing/m1.4_final_06_07_22uniref90.20220609.mmsdb",
+    "uniref": "/home/projects-wrighton-2/DRAM/dram_data/dram1.4_testing/uniref90.20220609.mmsdb",
     "pfam": "/home/projects-wrighton-2/DRAM/dram_data/dram1.4_testing/pfam.mmspro",
     "dbcan": "/home/projects-wrighton-2/DRAM/dram_data/dram1.4_testing/dbCAN-HMMdb-V10.txt",
     "viral": "/home/projects-wrighton-2/DRAM/dram_data/dram1.4_testing/refseq_viral.20220610.mmsdb",
@@ -33,7 +33,7 @@
     "amg_database": "/home/projects-wrighton-2/DRAM/dram_data/dram1.4_testing/amg_database.20220609.tsv"
   },
   "dram_version": "1.4.0",
-  "description_db": "/home/projects-wrighton-2/DRAM/dram_data/dram1.4_testing/description_db.sqlite",
+  "description_db": "/home/projects-wrighton-2/DRAM/dbs_20220920_just_kegg/description_db.sqlite",
   "setup_info": {
     "kofam_hmm": {
       "name": "KOfam db",
@@ -49,7 +49,7 @@
     },
     "uniref": {
       "name": "UniRef db",
-      "description_db_updated": "06/29/2022, 11:40:12",
+      "description_db_updated": "09/22/2022, 14:55:45",
       "citation": "",
       "version": "90",
       "Download time": "06/09/2022, 09:50:11",
@@ -60,7 +60,7 @@
       "citation": "",
       "Download time": "06/08/2022, 18:46:31",
       "Origin": "Downloaded by DRAM",
-      "description_db_updated": "07/07/2022, 17:30:04"
+      "description_db_updated": "09/22/2022, 11:32:28"
     },
     "dbcan": {
       "name": "dbCAN db",
@@ -68,7 +68,7 @@
       "version": "10",
       "Download time": "06/08/2022, 18:46:35",
       "Origin": "Downloaded by DRAM",
-      "description_db_updated": "06/30/2022, 10:47:07"
+      "description_db_updated": "09/22/2022, 11:32:28"
     },
     "vogdb": {
       "name": "VOGDB db",
@@ -76,11 +76,11 @@
       "version": "latest",
       "Download time": "06/08/2022, 18:46:56",
       "Origin": "Downloaded by DRAM",
-      "description_db_updated": "06/27/2022, 23:03:54"
+      "description_db_updated": "09/22/2022, 11:30:47"
     },
     "viral": {
       "name": "RefSeq Viral db",
-      "description_db_updated": "06/29/2022, 13:43:42",
+      "description_db_updated": "09/22/2022, 11:31:38",
       "citation": "",
       "viral_files": 2,
       "Download time": "06/10/2022, 11:29:46",
@@ -88,7 +88,7 @@
     },
     "peptidase": {
       "name": "MEROPS peptidase db",
-      "description_db_updated": "06/29/2022, 13:47:50",
+      "description_db_updated": "09/22/2022, 11:32:27",
       "citation": "",
       "Download time": "06/09/2022, 09:20:50",
       "Origin": "Downloaded by DRAM"
@@ -206,7 +206,7 @@
     },
     "kegg": {
       "name": "KEGG db",
-      "description_db_updated": "06/28/2022, 18:06:34",
+      "description_db_updated": "09/21/2022, 17:53:41",
       "citation": "Kanehisa, M., Furumichi, M., Sato, Y., Ishiguro-Watanabe, M., and Tanabe, M.; KEGG: integrating viruses and cellular organisms. Nucleic Acids Res. 49, D545-D551 (2021)."
     },
     "sulfur_hmm": {
@@ -225,5 +225,5 @@
       "Origin": "Downloaded by DRAM"
     }
   },
-  "log_path": "/home/projects-wrighton-2/DRAM/dram_data/dram1.4_testing/database_processing.log"
+  "log_path": "../../dbs_20220920_just_kegg/database_processing.log"
 }

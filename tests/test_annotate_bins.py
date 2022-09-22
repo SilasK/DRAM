@@ -528,7 +528,6 @@ def test_vogdb_hmmscan_formater():
     assert output_rcvd.equals(output_expt), "Error in vogdb_hmmscan_formater"
 
 
-<<<<<<< HEAD
 def test_dbcan_hmmscan_formater():
     # TODO can we test with db-handler?
     output_expt = pd.DataFrame({"bin_1.scaffold_1": ["GT4; GT5", "GT5.hmm"],
@@ -541,8 +540,6 @@ def test_dbcan_hmmscan_formater():
     output_rcvd.sort_index(inplace=True)
     output_expt.sort_index(inplace=True)
     assert output_rcvd.equals(output_expt), "Error in dbcan_hmmscan_formater"
-=======
->>>>>>> scikit_fix
 
 
 test_gbk = """LOCUS       NC_001422.1   5386 bp   DNA   linear   ENV   %s

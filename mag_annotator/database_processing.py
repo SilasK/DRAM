@@ -442,7 +442,7 @@ def prepare_databases(output_dir, loggpath=None, kegg_loc=None, gene_ko_link_loc
         del database_settings['uniref']
     
     
-    locs = {i.removesuffix('_loc'):j for i, j in locals().items() if i.endswith('_loc') and j is not None}
+    locs = {i.replace('_loc', ''):j for i, j in locals().items() if i.endswith('_loc') and j is not None}
     download_functions = {i[9:]:j for i,j in globals().items() if callable(j) and i.startswith('download_')}
     process_functions = {i[8:]:j for i,j in globals().items() if callable(j) and i.startswith('process_')}
     functions = {i:j for i,j in globals().items() if callable(j) and i.startswith('download_')}

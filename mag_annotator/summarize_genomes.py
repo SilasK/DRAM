@@ -15,6 +15,8 @@ from datetime import datetime
 from mag_annotator.database_handler import DatabaseHandler
 from mag_annotator.utils import get_ordered_uniques, setup_logger
 
+from memory_profiler import profile
+
 # TODO: add RBH information to output
 # TODO: add flag to output table and not xlsx
 # TODO: add flag to output heatmap table

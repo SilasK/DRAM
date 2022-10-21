@@ -22,6 +22,8 @@ from mag_annotator.utils import run_process, make_mmseqs_db, merge_files, \
 from mag_annotator.database_handler import DatabaseHandler
 from mag_annotator.fasta_dup_name_test import fastas_dup_check
 
+from memory_profiler import profile
+
 MAG_DBS_TO_ANNOTATE = ('kegg', 'kofam_hmm', 'kofam_ko_list', 'uniref', 'peptidase', 'pfam', 'dbcan', 'vogdb')
 
 # TODO: Bind verbose to logging
@@ -936,6 +938,7 @@ def make_fasta_namses_df(fasta_loc):
 # TODO: Add force flag to remove output dir if it already exists
 # TODO: Add continute flag to continue if output directory already exists
 # TODO: make fasta loc either a string or list to remove annotate_bins_cmd and annotate_called_genes_cmd?
+@profile
 def annotate_bins(input_fasta:list, output_dir='.', min_contig_size=2500, prodigal_mode='meta', trans_table='11',
                   bit_score_threshold=60, rbh_bit_score_threshold=350, custom_db_name=(), custom_fasta_loc=(),
                   custom_hmm_name=(), custom_hmm_loc=(), custom_hmm_cutoffs_loc=(), use_uniref=False,

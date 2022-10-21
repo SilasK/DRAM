@@ -16,6 +16,8 @@ from skbio import write as write_sequence
 from mag_annotator.database_handler import DatabaseHandler
 from mag_annotator.utils import run_process, make_mmseqs_db, download_file, merge_files, remove_prefix, remove_suffix, setup_logger
 
+from memory_profiler import profile
+
 NUMBER_OF_VIRAL_FILES = 2
 DEFAULT_DBCAN_RELEASE = '11'
 DEFAULT_DBCAN_DATE = '08062022'
@@ -419,6 +421,7 @@ def check_file_exists(*paths):
             raise ValueError(f"Database location does not exist: {i}")
 
 
+@profile
 def prepare_databases(output_dir, loggpath=None, kegg_loc=None, gene_ko_link_loc=None, kofam_hmm_loc=None,
                       kofam_ko_list_loc=None, kegg_download_date=None, uniref_loc=None,
                       uniref_version=DEFAULT_UNIREF_VERSION, pfam_loc=None, pfam_hmm_loc=None,

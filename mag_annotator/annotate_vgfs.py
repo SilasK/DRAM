@@ -446,7 +446,7 @@ def annotate_vgfs(input_fasta, virsorter_affi_contigs=None, output_dir='.', min_
     db_handler.filter_db_locs(low_mem_mode=low_mem_mode,
                               use_uniref=use_uniref,
                               use_vogdb=True,
-                              master_list=VMAG_DBS_TO_ANNOTATE
+                              master_list=VMAG_DBS_TO_ANNOTATE,
                               use_camper=use_camper,
                               use_fegenie=use_fegenie)
 

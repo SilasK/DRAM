@@ -198,6 +198,7 @@ class DatabaseHandler:
                            pfam_loc=None, pfam_hmm_loc=None, dbcan_loc=None, dbcan_fam_activities_loc=None,
                            dbcan_subfam_ec_loc=None, viral_loc=None, peptidase_loc=None, vogdb_loc=None,
                            vog_annotations_loc=None, description_db_loc=None, genome_summary_form_loc=None,
+                           log_path_loc=None,
                            camper_hmm_loc=None, camper_fa_db_loc=None, camper_hmm_cutoffs_loc=None,
                            camper_fa_db_cutoffs_loc=None, camper_distillate_loc=None, fegenie_hmm_loc=None,
                            fegenie_cutoffs_loc=None, sulfur_hmm_loc=None, sulfur_cutoffs_loc=None,

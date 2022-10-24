@@ -526,7 +526,7 @@ def test_kofam_hmmscan_formater():
     assert output_rcvd.equals(output_expt), "Error in kofam_hmmscan_formater"
 
 
-def test_vogdb_hmmscan_formater():
+def test_vogdb_hmmscan_formater(logger):
     #TODO Not Done
     output_expt = pd.DataFrame({
         "bin_1.scaffold_1": "VOG00001",
@@ -534,7 +534,7 @@ def test_vogdb_hmmscan_formater():
     }, index=["vogdb_id"]).T
     input_b6 = os.path.join('tests', 'data', 'unformatted_vogdb.b6')
     hits = parse_hmmsearch_domtblout(input_b6)
-    output_rcvd = vogdb_hmmscan_formater(hits=hits, db_name='vogdb')
+    output_rcvd = vogdb_hmmscan_formater(hits=hits, db_name='vogdb', logger=logger)
     output_rcvd.sort_index(inplace=True)
     output_expt.sort_index(inplace=True)
     assert output_rcvd.equals(output_expt), "Error in vogdb_hmmscan_formater"

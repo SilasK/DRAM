@@ -14,12 +14,6 @@ from mag_annotator.database_handler import DatabaseHandler
 # TODO: filter scaffolds file, gff file
 # TODO: add negate, aka pull not from given list
 
-"""
-import os
-
-os.system("DRAM.py strainer --i ./strainer.tsv -f genes.faa -o filter_genes.faa")
-os.system("DRAM.py strainer --i ./strainer.tsv -f genes.fna -o filter_genes.fna")
-"""
 
 def get_genes_from_identifiers(annotations, genes=None, fastas=None, scaffolds=None, identifiers=None, categories=None,
                                custom_distillate=None):
@@ -88,9 +82,8 @@ def pull_sequences(input_tsv, input_fasta, output_fasta, fastas=None, scaffolds=
     try:
         annotations = pd.read_csv(input_tsv, sep='\t', index_col=0)
         if adjective_sheet is not None:
-            adjective_sheet = pd.read_csv(input_tsv, sep='\t', index_col=0) 
+            adjective_sheet = pd.read_csv(input_tsv, sep='\t', index_col=0)
             annotations = annotations.loc[adjective_sheet.index]
-            breakpoint()
         annotation_genes_to_keep = get_genes_from_identifiers(annotations, genes, fastas, scaffolds, identifiers,
                                                               categories, custom_distillate)
         annotations = annotations.loc[annotation_genes_to_keep]
@@ -135,7 +128,7 @@ def pull_sequences(input_tsv, input_fasta, output_fasta, fastas=None, scaffolds=
         logger.error(err)
         logger.critical("It looks like your input files are not appropriate for the filter you are trying to apply."
                      " For example using a Viral or AMG filter on an annotations that has no viral information.")
-        
+
         raise err
     except Exception as err:
         logger.error(err)
@@ -192,7 +185,7 @@ def get_gene_neighborhoods(input_file, output_dir, genes=None, identifiers=None,
     #setup logger
     # Get a logger
     # if log_file_path is None:
-    log_file_path = path.join(output_dir, "Strainer.log")
+    log_file_path = path.join(output_dir, "strainer.log")
     logger = logging.getLogger('strainer_log')
     setup_logger(logger, log_file_path)
     logger.info(f"The log file is created at {log_file_path}")

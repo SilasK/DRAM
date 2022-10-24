@@ -128,6 +128,18 @@ def processed_hits():
     processed_hits = process_reciprocal_best_hits(forward, reverse)
     return processed_hits
 
+def test_dbcan_hmmscan_formater():
+    # TODO can we test with db-handler?
+    output_expt = pd.DataFrame({"bin_1.scaffold_1": ["GT4; GT5", "GT5.hmm"],
+                           "bin_1.scaffold_2": ["GH1", "GH1.hmm"]}, index=["cazy_ids", "cazy_best_hit"]).T
+    input_b6 = os.path.join('tests', 'data', 'unformatted_cazy.b6')
+    hits = parse_hmmsearch_domtblout(input_b6)
+    output_rcvd = dbcan_hmmscan_formater(hits=hits, db_name='cazy')
+    #hits.sort_values('full_evalue').drop_duplicates(subset=["query_id"])
+    # output_rcvd
+    output_rcvd.sort_index(inplace=True)
+    output_expt.sort_index(inplace=True)
+    assert output_rcvd.equals(output_expt), "Error in dbcan_hmmscan_formater"
 
 def test_process_reciprocal_best_hits(processed_hits):
     assert processed_hits.shape == (7, 5)

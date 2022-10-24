@@ -16,7 +16,7 @@ from mag_annotator.annotate_bins import annotate_fastas, get_fasta_name, perform
 from mag_annotator.utils import setup_logger
 from mag_annotator.summarize_genomes import get_ids_from_annotations_all
 
-VMAG_DBS_TO_ANNOTATE = ('kegg', 'kofam', 'kofam_ko_list', 'uniref', 'peptidase', 'pfam', 'dbcan', 'viral', 'vogdb')
+VMAG_DBS_TO_ANNOTATE = ('kegg', 'kofam_hmm', 'kofam_ko_list', 'uniref', 'peptidase', 'pfam', 'dbcan', 'viral', 'vogdb')
 VIRSORTER_COLUMN_NAMES = ['gene_name', 'start_position', 'end_position', 'length', 'strandedness',
                           'viral_protein_cluster_hit', 'viral_protein_cluster_hit_score',
                           'viral_protein_cluster_hit_evalue', 'viral_protein_cluster_category', 'pfam_hit',
@@ -288,9 +288,6 @@ def get_metabolic_flags(annotations, metabolic_genes, amgs, verified_amgs, scaff
     flag_dict = dict()
     metabolic_genes = set(metabolic_genes)
     for scaffold, scaffold_annotations in annotations.groupby('scaffold'):
-        # perc_xh = sum([i == 'Xh' if not pd.isna(i) else False for i in scaffold_annotations['vogdb_categories']]) \
-        #           / scaffold_annotations.shape[0]
-        # is_j = perc_xh >= 0.18
         for gene, row in scaffold_annotations.iterrows():
             # set up
             flags = ''
@@ -429,9 +426,9 @@ def annotate_vgfs(input_fasta, virsorter_affi_contigs=None, output_dir='.', min_
                   prodigal_mode='meta', trans_table='11', bit_score_threshold=60, rbh_bit_score_threshold=350,
                   custom_db_name=(), custom_fasta_loc=(), custom_hmm_loc=(), custom_hmm_cutoffs_loc=(),
                   custom_hmm_name=(), use_uniref=False, use_camper=False, use_fegenie=False, kofam_use_dbcan2_thresholds=False, skip_trnascan=False,
-                  keep_tmp_dir=True, low_mem_mode=False, threads=10, verbose=True):
+                  keep_tmp_dir=True, low_mem_mode=False, threads=10, verbose=True, config_loc:str=None):
     mkdir(output_dir)
-    log_file_path = path.join(output_dir, "Annotation.log")
+    log_file_path = path.join(output_dir, "annotate.log")
     logger = logging.getLogger('annotation_log')
     setup_logger(logger, log_file_path)
 
@@ -445,8 +442,13 @@ def annotate_vgfs(input_fasta, virsorter_affi_contigs=None, output_dir='.', min_
                       'training to work well.')
 
     # get database locations
-    db_handler = DatabaseHandler(logger)
-    db_handler.filter_db_locs(low_mem_mode, use_uniref, use_camper, use_fegenie, True, VMAG_DBS_TO_ANNOTATE)
+    db_handler = DatabaseHandler(logger, config_loc=config_loc)
+    db_handler.filter_db_locs(low_mem_mode=low_mem_mode,
+                              use_uniref=use_uniref,
+                              use_vogdb=True,
+                              master_list=VMAG_DBS_TO_ANNOTATE
+                              use_camper=use_camper,
+                              use_fegenie=use_fegenie)
 
     if virsorter_affi_contigs is not None:
         virsorter_hits = get_virsorter_hits(virsorter_affi_contigs)
@@ -482,10 +484,27 @@ def annotate_vgfs(input_fasta, virsorter_affi_contigs=None, output_dir='.', min_
 
     # annotate vMAGs
     rename_bins = False
-    annotations = annotate_fastas(contig_locs, output_dir, db_handler, logger, min_contig_size, prodigal_mode, trans_table,
-                                  bit_score_threshold, rbh_bit_score_threshold, custom_db_name, custom_fasta_loc,
-                                  custom_hmm_name, custom_hmm_loc, custom_hmm_cutoffs_loc, kofam_use_dbcan2_thresholds,
-                                  skip_trnascan, rename_bins, keep_tmp_dir, threads, verbose)
+    annotations = annotate_fastas(
+        fasta_locs=contig_locs,
+        output_dir=output_dir, 
+        db_handler=db_handler,
+        logger=logger,
+        min_contig_size=min_contig_size,
+        prodigal_mode=prodigal_mode,
+        trans_table=trans_table,
+        bit_score_threshold=bit_score_threshold,
+        rbh_bit_score_threshold=rbh_bit_score_threshold,
+        custom_db_name=custom_db_name,
+        custom_fasta_loc=custom_fasta_loc,
+        custom_hmm_name=custom_hmm_name,
+        custom_hmm_loc=custom_hmm_loc,
+        custom_hmm_cutoffs_loc=custom_hmm_cutoffs_loc,
+        kofam_use_dbcan2_thresholds=kofam_use_dbcan2_thresholds,
+        skip_trnascan=skip_trnascan,
+        rename_bins=rename_bins,
+        keep_tmp_dir=keep_tmp_dir,
+        threads=threads,
+        verbose=verbose)
     logging.info('Annotations complete, assigning auxiliary scores and flags')
 
     annotations = add_dramv_scores_and_flags(annotations, db_handler, logger, virsorter_hits, input_fasta)

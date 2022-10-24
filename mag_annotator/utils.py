@@ -20,7 +20,7 @@ BOUTFMT6_COLUMNS = ['qId', 'tId', 'seqIdentity', 'alnLen', 'mismatchCnt', 'gapOp
 def download_file(url: str, output_file: str, logger: logging.Logger, alt_urls: list = None, verbose = True):
     # TODO: catching error 4 and give error message to retry or retry automatically
     links = [url] if alt_urls is None else [url] + alt_urls
-    for l in links: 
+    for l in links:
         if verbose:
             print('downloading %s' % url)
         try:
@@ -51,7 +51,7 @@ def setup_logger(logger, *log_file_paths, level=logging.INFO):
         logger.addHandler(fh)
 
 
-def run_process(command, logger, shell:bool=False, capture_stdout:bool=True, save_output:str=None, 
+def run_process(command, logger, shell:bool=False, capture_stdout:bool=True, save_output:str=None,
                 check:bool=False, stop_on_error:bool=True, verbose:bool=False) -> str:
     """
     Standardization of parameters for using subprocess.run, provides verbose mode and option to run via shell
@@ -262,5 +262,3 @@ def sig_scores(hits:pd.DataFrame, score_db:pd.DataFrame) -> pd.DataFrame:
         return pd.concat(is_sig)
     else:
         return pd.DataFrame()
-
-

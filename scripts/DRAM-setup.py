@@ -2,10 +2,10 @@
 
 import argparse
 
-from mag_annotator.database_processing import prepare_databases, update_dram_forms, \
-    DEFAULT_DBCAN_DATE, DEFAULT_DBCAN_RELEASE, DEFAULT_UNIREF_VERSION
-from mag_annotator.database_handler import set_database_paths, print_database_locations, populate_description_db, \
-    export_config, import_config
+from mag_annotator.database_processing import (prepare_databases, update_dram_forms,
+    DEFAULT_DBCAN_DATE, DEFAULT_DBCAN_RELEASE, DEFAULT_UNIREF_VERSION)
+from mag_annotator.database_handler import (DatabaseHandler,  set_database_paths,  populate_description_db,
+    export_config, import_config, print_database_locations, print_database_settings, mv_db_folder)
 from mag_annotator import __version__ as version
 
 
@@ -20,12 +20,18 @@ if __name__ == '__main__':
     set_db_locs_parser = subparsers.add_parser('set_database_locations',
                                                help="Set database locations for already processed databases",
                                                formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    new_data_loc_parser = subparsers.add_parser('mv_db_folder',
+                                                help="If you move a databases folder this will update all locations"
+                                                " for all databases moved",
+                                               formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     update_description_db_parser = subparsers.add_parser('update_description_db', help='Update description database',
                                                          formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     update_dram_forms_parser = subparsers.add_parser('update_dram_forms',
                                                      help='Update DRAM distillate and liquor forms',
                                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     print_db_locs_parser = subparsers.add_parser('print_config', help="Print database locations",
+                                                 formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    print_db_settings_parser = subparsers.add_parser('print_settings', help="Print database settings",
                                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     import_config_parser = subparsers.add_parser('import_config', help="Import CONFIG file",
                                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -55,7 +61,7 @@ if __name__ == '__main__':
                                          "not impact DRAM distillation")
     prepare_dbs_parser.add_argument('--pfam_loc', default=None,
                                     help="File path to pfam-A full file, if already downloaded (Pfam-A.full.gz)")
-    prepare_dbs_parser.add_argument('--pfam_hmm_dat', default=None,
+    prepare_dbs_parser.add_argument('--pfam_hmm_loc', default=None,
                                     help="pfam hmm .dat file to get PF descriptions, if already downloaded "
                                          "(Pfam-A.hmm.dat.gz)")
     prepare_dbs_parser.add_argument('--dbcan_loc', default=None, help="File path to dbCAN, if already downloaded "
@@ -114,13 +120,13 @@ if __name__ == '__main__':
     set_db_locs_parser.add_argument('--vog_annotations', default=None,
                                     help='vog annotations file') # add loc to vog_annotations to match the rest
 
-    set_db_locs_parser.add_argument('--camper_tar_gz_loc', default=None, 
+    set_db_locs_parser.add_argument('--camper_tar_gz_loc', default=None,
                                     help='The source for the CAMPER database files, this is a tar.gz file downloaded'
                                     ' from the release page https://github.com/WrightonLabCSU/CAMPER/releases')
     set_db_locs_parser.add_argument('--fegenie_tar_gz_loc', default=None,
                                     help='The source for the FeGenie database files, this is a tar.gz file downloaded'
                                     ' from the release page https://github.com/Arkadiy-Garber/FeGenie/releases')
-    set_db_locs_parser.add_argument('--sulfur_tar_gz_loc', default=None, 
+    set_db_locs_parser.add_argument('--sulfur_tar_gz_loc', default=None,
                                     help='This is the tar.gz for the Sulfur db, get it from the  github releases page')
 
     set_db_locs_parser.add_argument('--viral_refseq_loc', default=None,
@@ -137,6 +143,12 @@ if __name__ == '__main__':
     set_db_locs_parser.add_argument('--amg_database_loc', default=None, help="File path to amg database")
     set_db_locs_parser.add_argument('--update_description_db', action='store_true', default=False)
     set_db_locs_parser.set_defaults(func=set_database_paths)
+    new_data_loc_parser.add_argument('--new_location', default='.', help="Path to directory containing databases,"
+                                     " will default to current directory. Note that paths will not be changed if"
+                                     " a db can't be found")
+    new_data_loc_parser.add_argument('--old_config_file', default=None, help="Path to the old config file if the current"
+                                     " config is for diferent database")
+    new_data_loc_parser.set_defaults(func=mv_db_folder)
 
     # parser for updating database descriptions
     update_description_db_parser.add_argument('--output_loc', help="Location to store desciption database, will be "

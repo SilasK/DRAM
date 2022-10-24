@@ -4,8 +4,8 @@ import argparse
 
 from mag_annotator.database_processing import prepare_databases, update_dram_forms, \
     DEFAULT_DBCAN_DATE, DEFAULT_DBCAN_RELEASE, DEFAULT_UNIREF_VERSION
-from mag_annotator.database_handler import DatabaseHandler,  set_database_paths,  populate_description_db, \
-    export_config, import_config, print_database_locations, print_database_settings
+from mag_annotator.database_handler import set_database_paths, print_database_locations, populate_description_db, \
+    export_config, import_config
 from mag_annotator import __version__ as version
 
 
@@ -26,8 +26,6 @@ if __name__ == '__main__':
                                                      help='Update DRAM distillate and liquor forms',
                                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     print_db_locs_parser = subparsers.add_parser('print_config', help="Print database locations",
-                                                 formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    print_db_settings_parser = subparsers.add_parser('print_settings', help="Print database settings",
                                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     import_config_parser = subparsers.add_parser('import_config', help="Import CONFIG file",
                                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -57,7 +55,7 @@ if __name__ == '__main__':
                                          "not impact DRAM distillation")
     prepare_dbs_parser.add_argument('--pfam_loc', default=None,
                                     help="File path to pfam-A full file, if already downloaded (Pfam-A.full.gz)")
-    prepare_dbs_parser.add_argument('--pfam_hmm_loc', default=None,
+    prepare_dbs_parser.add_argument('--pfam_hmm_dat', default=None,
                                     help="pfam hmm .dat file to get PF descriptions, if already downloaded "
                                          "(Pfam-A.hmm.dat.gz)")
     prepare_dbs_parser.add_argument('--dbcan_loc', default=None, help="File path to dbCAN, if already downloaded "

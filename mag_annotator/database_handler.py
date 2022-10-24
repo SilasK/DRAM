@@ -397,6 +397,7 @@ class DatabaseHandler:
 
     def filter_db_locs(self, low_mem_mode=False, use_uniref=True, use_camper=True, use_fegenie=True, 
                        use_sulfur=True, use_vogdb=True, master_list=None):
+
         if master_list is None:
             dbs_to_use = self.config['search_databases'].keys()
         else:

@@ -217,7 +217,6 @@ def make_viral_functional_heatmap(functional_df, vgf_order=None):
 def summarize_vgfs(input_file, output_dir, groupby_column='scaffold', max_auxiliary_score=3,
                    remove_transposons=False, remove_fs=False, custom_distillate=None, log_file_path:str=None):
     # make output folder
-    
     mkdir(output_dir)
     if log_file_path is None:
         log_file_path = path.join(output_dir, "Distillation.log")

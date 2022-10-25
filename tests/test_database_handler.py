@@ -1,11 +1,11 @@
 import pytest
 
-from os import path
+from os import path, environ
 from sqlalchemy.orm.exc import NoResultFound
 import json
 
 from mag_annotator.database_setup import KeggDescription, create_description_db
-from mag_annotator.database_handler import DatabaseHandler, print_database_locations, import_config, export_config
+from mag_annotator.database_handler import DatabaseHandler, print_database_locations, import_config, export_config, get_config_loc
 from mag_annotator.utils import setup_logger
 import logging
 import pandas as pd
@@ -13,10 +13,6 @@ import numpy as np
 
 TEST_CONF_PATH = path.join('tests', 'data', 'test_CONFIG')
 TEST_CONF_PATH_1_3 = path.join('tests', 'data', 'test_CONFIG_1.3-')
-"""
-import os
-os.system("pytest tests/test_database_handler.py")
-"""
 
 
 @pytest.fixture()
@@ -281,7 +277,7 @@ def test_write_config(tmpdir, db_handler):
 
 
 @pytest.fixture()
-def db_handler_1_3():
+def db_handler_1_3(logger):
     return DatabaseHandler(logger, TEST_CONF_PATH_1_3)
 
 
@@ -299,6 +295,12 @@ def test_print_database_locations(capsys):
     out, err = capsys.readouterr()
     assert 'Description db: ' in out
     assert err.endswith("Logging to console\n")
+
+def test_enviroment_variable(logger):
+    mypath:str = 'my_path_that-is_unique'
+    environ['DRAM_CONFIG_LOCATION'] = mypath
+    assert get_config_loc() == mypath
+    del(environ['DRAM_CONFIG_LOCATION'])
 
 
 def test_set_database_paths(logger):

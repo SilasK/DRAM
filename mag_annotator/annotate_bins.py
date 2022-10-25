@@ -30,13 +30,8 @@ MAG_DBS_TO_ANNOTATE += tuple(CAMPER_SETTINGS.keys())
 MAG_DBS_TO_ANNOTATE += tuple(FEGENIE_SETTINGS.keys())
 MAG_DBS_TO_ANNOTATE += tuple(SULPHUR_SETTINGS.keys())
 
-# TODO: add ability to take into account multiple best hits as in old_code.py
-# TODO: add silent mode
-# TODO: add abx resistance genes
-# TODO: in annotated gene faa checkout out ko id for actual kegg gene id
-# TODO: add ability to handle [] in file names
-# TODO Exceptions are not fully handled
-# TODO Distillate sheets is part of the config, drop it
+# TODO: Bind verbose to logging
+# TODO Exceptions are not fully handled by logging
 
 
 def filter_fasta(fasta_loc, min_len=5000, output_loc=None):
@@ -210,7 +205,7 @@ def dbcan_hmmscan_formater(hits:pd.DataFrame,  db_name:str, db_handler=None):
     hits_df = pd.DataFrame(all_hits)
     hits_df.columns = [f"{db_name}_ids"]
     def description_pull(x:str):
-         id_list = [re.findall('^[A-Z]*[0-9]*', str(x))[0] for x in  x.split('; ')], 
+         id_list = [re.findall('^[A-Z]*[0-9]*', str(x))[0] for x in  x.split('; ')],
          id_list = [y for x in  id_list for y in x if len(x) > 0]
          description_list = db_handler.get_descriptions(id_list, 'dbcan_description').values()
          description_str = '; '.join(description_list)
@@ -220,8 +215,8 @@ def dbcan_hmmscan_formater(hits:pd.DataFrame,  db_name:str, db_handler=None):
         hits_df[f"{db_name}_subfam_ec"] = hits_df[f"{db_name}_ids"].apply(
             lambda x:'; '.join(
                 db_handler.get_descriptions(
-                    x.split('; '), 
-                    'dbcan_description', 
+                    x.split('; '),
+                    'dbcan_description',
                     description_name='ec'
                 ).values()))
     hits_df[f'{db_name}_best_hit'] = [find_best_dbcan_hit(*i) for i in hit_groups]
@@ -255,11 +250,16 @@ def kofam_hmmscan_formater(hits:pd.DataFrame, hmm_info_path:str=None, use_dbcan2
 
 
 
-def vogdb_hmmscan_formater(hits:pd.DataFrame,  db_name:str, db_handler=None):
+def vogdb_hmmscan_formater(hits:pd.DataFrame,  db_name:str, logger:logging.Logger,
+                           db_handler=None):
+    categories_col = f"{db_name}_categories"
+    id_col = f"{db_name}_id"
+    description_col = f"{db_name}_description"
     hits_sig = hits[hits.apply(get_sig_row, axis=1)]
     if len(hits_sig) == 0:
+        logger.warn("No significant hits for vog_db")
         # if nothing significant then return nothing, don't get descriptions
-        return pd.DataFrame()
+        return pd.DataFrame(columns=[categories_col, id_col, description_col])
     # Get the best hits
     hits_best = hits_sig.sort_values('full_evalue').drop_duplicates(subset=["query_id"])
     if db_handler is None:
@@ -268,16 +268,16 @@ def vogdb_hmmscan_formater(hits:pd.DataFrame,  db_name:str, db_handler=None):
         # get_descriptions
         desc_col = f"{db_name}_hits"
         descriptions = pd.DataFrame(
-            db_handler.get_descriptions(hits_best['target_id'].unique(), f"{db_name}_description"),
+            db_handler.get_descriptions(hits_best['target_id'].unique(), description_col),
             index=[desc_col]).T
         categories = descriptions[desc_col].apply(lambda x: x.split('; ')[-1])
-        descriptions[f"{db_name}_categories"] = categories.apply(
+        descriptions[categories_col] = categories.apply(
             lambda x: ';'.join(set([x[i:i + 2] for i in range(0, len(x), 2)])))
         descriptions['target_id'] = descriptions.index
         hits_df = pd.merge(hits_best[['query_id', 'target_id']], descriptions, on=f'target_id')
     hits_df.set_index('query_id', inplace=True, drop=True)
     hits_df.rename_axis(None, inplace=True)
-    hits_df.rename(columns={'target_id': f"{db_name}_id"}, inplace=True)
+    hits_df.rename(columns={'target_id': id_col}, inplace=True)
     return hits_df
 
 
@@ -368,7 +368,6 @@ def generate_annotated_fasta(input_fasta, annotations, verbosity='short', name=N
 
 def create_annotated_fasta(input_fasta, annotations, output_fasta, verbosity='short', name=None):
     """For use with genes files, added annotations"""
-    
     write_sequence( generate_annotated_fasta(input_fasta, annotations, verbosity, name), format='fasta', into=output_fasta)
 
 
@@ -1033,7 +1032,7 @@ def annotate_bins(input_fasta:list, output_dir='.', min_contig_size=2500, prodig
     fasta_locs = [j for i in input_fasta for j in glob(i)]
     mkdir(output_dir)
     if log_file_path is None:
-        log_file_path = path.join(output_dir, "annotate_bins.log")
+        log_file_path = path.join(output_dir, "annotate.log")
     logger = logging.getLogger('annotation_log')
     setup_logger(logger, log_file_path)
     logger.info(f"The log file is created at {log_file_path}.")
@@ -1142,7 +1141,7 @@ def perform_fasta_checks(fasta_locs, logger):
             raise ValueError('Genome file names must be unique. At least one name appears twice in this search.')
         fastas_dup_check(fasta_locs, '>')
     except ValueError as error:
-        logging.critical(error)
+        logger.critical(error)
         raise error
     logger.info("No duplicate names found")
 
@@ -1156,7 +1155,7 @@ def annotate_called_genes(fasta_locs, output_dir='.', bit_score_threshold=60, rb
 
     # Get a logger
     if log_file_path is None:
-        log_file_path = path.join(output_dir, "Annotation.log")
+        log_file_path = path.join(output_dir, "annotate.log")
     logger = logging.getLogger('annotation_log')
     setup_logger(logger, log_file_path)
     logger.info(f"The log file is created at {log_file_path}")
@@ -1267,8 +1266,8 @@ def merge_annotations_cmd(input_dirs, output_dir):
     mkdir(output_dir)
     # Get a logger
     annotations_list = list()
-    log_file_path = path.join(output_dir, "Annotation.log")
-    logger = logging.getLogger('annotation_log')
+    log_file_path = path.join(output_dir, "annotation.log")
+    logger = logging.getLogger('annotate.log')
     setup_logger(logger, log_file_path)
     logger.info(f"The log file is created at {log_file_path}")
 

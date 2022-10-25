@@ -43,20 +43,30 @@ def clear_dict(val):
         return {k: clear_dict(v) for k, v in val.items()}
     else:
         return None
-    
+
 
 class DatabaseHandler:
 
     def __init__(self, logger, config_loc=None):
-        # read in new configuration 
+        # read in new configuration
         # TODO: validate config file after reading it in
+        if logger is None:
+            logger = logging.getLogger("database_handler.log")
+            # log_path = self.get_log_path()
+            # setup_logger(logger, log_path)
+            setup_logger(logger)
+            logger.info(f"Logging to console")
+        self.logger = logger
         if config_loc is None:
             config_loc = get_config_loc()
+        self.load_config(config_loc)
 
         self.config_loc = config_loc
-        conf = json.loads(open(self.config_loc).read())
+
+    def load_config(self, config_file):
+        conf = json.loads(open(config_file).read())
         if len(conf) == 0:
-            logger.warn('There is no config information in the provided file')
+            self.logger.warn('There is no config information in the provided file')
             self.clear_config(write_config=False)
         if 'dram_version' not in conf:
             warnings.warn("The DRAM version in your config is empty."
@@ -64,24 +74,15 @@ class DatabaseHandler:
                           " import fails then you should check that"
                           " the origin of the file is valid.")
             self.__construct_from_dram_pre_1_4_0(conf)
-        else: 
+        else:
             conf_version = conf.get('dram_version')
             if conf_version is None:
-                db_handler = self.__construct_from_dram_pre_1_4_0(conf)
-            elif conf_version not in {current_dram_version, "1.4.0"}: # Known suported versions
+                self.__construct_from_dram_pre_1_4_0(conf)
+            elif conf_version not in {current_dram_version, "1.4.0",  "1.4.0rc1", "1.4.0rc2", "1.4.0rc3", "1.4.0rc4"}: # Known suported versions
                 warnings.warn("The DRAM version in your config is not listed in the versions "
                               "that are known to work. This may not be a problem, but if this "
                               "import fails then you should contact suport.")
-            db_handler = self.__construct_default(conf)
-
-        if logger is None:
-            logger = logging.getLogger("database_handler.log")
-            # log_path = self.get_log_path()
-            # setup_logger(logger, log_path)
-            setup_logger(logger)
-            logger.info(f"Logging to console")
-
-        self.logger = logger
+            self.__construct_default(conf)
 
     def get_log_path(self):
         path = self.config.get('log_path')
@@ -91,7 +92,7 @@ class DatabaseHandler:
 
 
     def __construct_default(self, conf:dict):
-        self.config = conf 
+        self.config = conf
 
         # set up description database connection
         description_loc = self.config.get('description_db')
@@ -136,7 +137,7 @@ class DatabaseHandler:
             warnings.warn('Database does not exist at path %s' % self.config.get('description_db'))
         else:
             self.start_db_session()
-    
+
     def start_db_session(self):
         engine = create_engine('sqlite:///%s' % self.config.get('description_db'))
         db_session = sessionmaker(bind=engine)
@@ -149,7 +150,7 @@ class DatabaseHandler:
         if clear_table:
             self.session.query(description_class).delete()
         # TODO: try batching
-        self.session.bulk_save_objects([description_class(**i) for i in description_list]) 
+        self.session.bulk_save_objects([description_class(**i) for i in description_list])
         self.session.commit()
         self.session.expunge_all()
 
@@ -160,9 +161,9 @@ class DatabaseHandler:
     def get_descriptions(self, ids, db_name, description_name='description'):
         description_class = TABLE_NAME_TO_CLASS_DICT[db_name]
         descriptions = [
-            des 
+            des
             for chunk in divide_chunks(list(ids), 499)
-            for des in self.session.query(description_class).filter(description_class.id.in_(chunk)).all() 
+            for des in self.session.query(description_class).filter(description_class.id.in_(chunk)).all()
         ]
         # [des for des in self.session.query(description_class).filter(description_class.id.in_(list(ids))).all() ]
         # [i.id for i in self.session.query(TABLE_NAME_TO_CLASS_DICT['dbcan_description']).all()]
@@ -179,7 +180,7 @@ class DatabaseHandler:
         out_str = ""
         settings = self.config.get('setup_info')
         if settings is None:
-            raise Warning('there are no settings, the config is corrupted or too old.')
+            warnings.warn('there are no settings, the config is corrupted or too old.', DeprecationWarning)
             return 'there are no settings, the config is corrupted or too old.'
         for i in ["search_databases", "database_descriptions", "dram_sheets"]:
             out_str += "\n"
@@ -195,12 +196,13 @@ class DatabaseHandler:
 
     def set_database_paths(self, kegg_loc=None, kofam_hmm_loc=None, kofam_ko_list_loc=None, uniref_loc=None,
                            pfam_loc=None, pfam_hmm_loc=None, dbcan_loc=None, dbcan_fam_activities_loc=None,
-                           dbcan_subfam_ec_loc=None, viral_loc=None, peptidase_loc=None, vogdb_loc=None, 
-                           vog_annotations_loc=None, description_db_loc=None, genome_summary_form_loc=None, 
+                           dbcan_subfam_ec_loc=None, viral_loc=None, peptidase_loc=None, vogdb_loc=None,
+                           vog_annotations_loc=None, description_db_loc=None, genome_summary_form_loc=None,
+                           log_path_loc=None,
                            camper_hmm_loc=None, camper_fa_db_loc=None, camper_hmm_cutoffs_loc=None,
                            camper_fa_db_cutoffs_loc=None, camper_distillate_loc=None, fegenie_hmm_loc=None,
-                           fegenie_cutoffs_loc=None, sulfur_hmm_loc=None, sulfur_cutoffs_loc=None, 
-                           module_step_form_loc=None, etc_module_database_loc=None, 
+                           fegenie_cutoffs_loc=None, sulfur_hmm_loc=None, sulfur_cutoffs_loc=None,
+                           module_step_form_loc=None, etc_module_database_loc=None,
                            function_heatmap_form_loc=None, amg_database_loc=None, write_config=True):
         def check_exists_and_add_to_location_dict(loc, old_value):
             if loc is None:  # if location is none then return the old value
@@ -246,10 +248,11 @@ class DatabaseHandler:
         }
 
         self.config.update({i:{
-            k:check_exists_and_add_to_location_dict(locs[i][k], self.config.get(i).get(k)) 
+            k:check_exists_and_add_to_location_dict(locs[i][k], self.config.get(i).get(k))
             for k in locs[i]} for i in locs})
 
         self.config['description_db'] = check_exists_and_add_to_location_dict(description_db_loc, self.config.get('description_db'))
+        self.config['log_path'] = check_exists_and_add_to_location_dict(log_path_loc, self.config.get('log_path_db'))
         self.start_db_session()
 
         if write_config:
@@ -318,7 +321,7 @@ class DatabaseHandler:
                 return pd.DataFrame({'id': line[0], 'description': description.replace('\n', ' ')}, index=[0])
         with open(dbcan_fam_activities) as f:
             description_data = pd.concat([line_reader(line) for line in f.readlines()])
-        
+
         ec_data = (pd.read_csv(dbcan_subfam_ec, sep='\t',names=['id', 'id2','ec'], comment='#')[['id', 'ec']]
                            .drop_duplicates())
         ec_data = (pd.concat([ec_data['id'],
@@ -372,8 +375,8 @@ class DatabaseHandler:
             self.logger.info(f'Description updated for the {db_name} database')
         # fill database
         mmseqs_database = ['kegg', 'uniref',  'viral', 'peptidase']
-        process_functions = {i:partial(self.make_header_dict_from_mmseqs_db, 
-                                       self.config['search_databases'][i]) 
+        process_functions = {i:partial(self.make_header_dict_from_mmseqs_db,
+                                       self.config['search_databases'][i])
                              for i in mmseqs_database
                              if self.config['search_databases'][i] is not None}
         # Use table names
@@ -381,21 +384,21 @@ class DatabaseHandler:
             'pfam': partial(self.process_pfam_descriptions,
                                 self.config.get('database_descriptions')['pfam_hmm']),
             'dbcan': partial(self.process_dbcan_descriptions,
-                                            self.config.get('database_descriptions')['dbcan_fam_activities'], 
+                                            self.config.get('database_descriptions')['dbcan_fam_activities'],
                                             self.config.get('database_descriptions')['dbcan_subfam_ec']),
             'vogdb': partial(self.process_vogdb_descriptions,
-                                         self.config.get('database_descriptions')['vog_annotations']) 
+                                         self.config.get('database_descriptions')['vog_annotations'])
         })
         if select_db is not None:
             process_functions = {i:k for i, k in process_functions.items() if i in select_db}
 
         for i, k in process_functions.items():
             check_db(i, k)
-            
+
         if update_config:  # if new description db is set then save it
             self.write_config()
 
-    def filter_db_locs(self, low_mem_mode=False, use_uniref=True, use_camper=True, use_fegenie=True, 
+    def filter_db_locs(self, low_mem_mode=False, use_uniref=True, use_camper=True, use_fegenie=True,
                        use_sulfur=True, use_vogdb=True, master_list=None):
 
         if master_list is None:
@@ -515,25 +518,26 @@ def import_config(config_loc):
     print('Import, appears to be successfull.')
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+def mv_db_folder(new_location:str='./', old_config_file:str=None):
+    new_location = path.abspath(new_location)
+    old_config_file = path.abspath(old_config_file)
+    db_handler = DatabaseHandler(None)
+    if old_config_file is not None:
+        db_handler.load_config(old_config_file)
+    paths = ["search_databases", "dram_sheets", "database_descriptions"]
+    def auto_move_path(k:str, v:str):
+        if v is None:
+            db_handler.logger.warn(f"The path for {k} was not set, so can't update.")
+            return
+        new_path = path.join(new_location, path.basename(v))
+        if not path.exists(new_path):
+            db_handler.logger.warn(f"There is no file at path {new_path},"
+                                   f" so no new location will be set for {k}.")
+            return
+        db_handler.logger.info(f"Moving {k} to {new_path}")
+        db_handler.set_database_paths(**{f"{k}_loc": new_path}, write_config=True)
+    auto_move_path('log_path', db_handler.config.get('log_path'))
+    auto_move_path('description_db', db_handler.config.get('description_db'))
+    for i in paths:
+        for k, v in db_handler.config.get(i).items():
+            auto_move_path(k, v)

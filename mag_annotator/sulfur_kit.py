@@ -24,14 +24,14 @@ DRAM_SETTINGS = {'sulfur_hmm': {'name': 'Sulfur placeholder', 'citation': CITATI
 def process(input_file, output_dir, logger, threads=1,  version=VERSION, verbose=False) -> dict:
     # this is the path within the tar file
     final_paths ={
-        "sulfur_hmm"      : path.join(output_dir, 
+        "sulfur_hmm"      : path.join(output_dir,
                                        f"{NAME}-{version}", f"{name}_hmm.hmm"),
     }
     if not path.exists(path.dirname(final_paths['sulfur_hmm'])):
         mkdir(path.dirname(final_paths['sulfur_hmm']))
     # move and concatanate hmm to location
     move(input_file, final_paths["sulfur_hmm"])
-    
+
     # build dbs
     run_process(['hmmpress', '-f', final_paths["sulfur_hmm"]], logger, verbose=verbose)  # all are pressed just in case
     return final_paths
@@ -41,7 +41,7 @@ def sig_scores(hits:pd.DataFrame, score_db:pd.DataFrame) -> pd.DataFrame:
     """
     This is a custom sig_scores function for FeGenie, it usese soft_bitscore_cutoff
     as a bit score cutoffs, given the name I am not shure that is corect.
-    
+
     Also, I use full score, is that corect?
     """
     data = pd.merge(hits, score_db, how='left', left_on='target_id', right_index=True)
@@ -65,8 +65,8 @@ def hmmscan_formater(hits:pd.DataFrame, logger:logging.Logger, db_name:str, top_
     return hits_df
 
 
-def search(genes_faa:str, tmp_dir:str, sulfur_hmm:str,  
-           logger:logging.Logger, threads:int, db_name:str=NAME, top_hit:bool=True, 
+def search(genes_faa:str, tmp_dir:str, sulfur_hmm:str,
+           logger:logging.Logger, threads:int, db_name:str=NAME, top_hit:bool=True,
            verbose:bool=True):
   return run_hmmscan(genes_faa=genes_faa,
                      db_loc=sulfur_hmm,
@@ -80,8 +80,8 @@ def search(genes_faa:str, tmp_dir:str, sulfur_hmm:str,
                          top_hit=True
                      ),
                      logger=logger)
-    
-# def search(query_db:str, gene_faa:str, tmp_dir:str, logger:logging.Logger, 
+
+# def search(query_db:str, gene_faa:str, tmp_dir:str, logger:logging.Logger,
 #            threads:str, verbose:str, db_handler, **args):
 #     return run_hmmscan(genes_faa=gene_faa,
 #                        db_loc=db_handler.config["search_databases"]['sulfur_hmm']['location'],

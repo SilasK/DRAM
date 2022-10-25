@@ -2,7 +2,7 @@ channels:
   - conda-forge
   - bioconda
 dependencies:
-  - python>=3.6
+  - python>=3.7
   - pandas
   - pytest
   - scikit-bio
@@ -10,7 +10,7 @@ dependencies:
   - mmseqs2!=10.6d92c
   - hmmer!=3.3.1
   - trnascan-se >=2
-  - scipy!=1.9.0
+  - scipy<=1.8.1
   - sqlalchemy
   - barrnap
   - altair >=4
@@ -18,3 +18,4 @@ dependencies:
   - networkx
   - ruby
   - parallel
+  - dram

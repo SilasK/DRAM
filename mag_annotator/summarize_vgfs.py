@@ -46,20 +46,17 @@ def add_custom_ms(annotations, distillate_form):
 
 
 def filter_to_amgs(annotations, max_aux=4, remove_transposons=True, remove_fs=False):
-    # def filter_to_amgs(annotations, max_aux=4, remove_transposons=True, remove_fs=False, remove_js=False):
-    potential_amgs = list()
-    for gene, row in annotations.iterrows():
-        amg_flags = row['amg_flags']
-        if not pd.isna(amg_flags):
-            vmap_aux_check = ('V' not in amg_flags) and ('M' in amg_flags) and (row['auxiliary_score'] <= max_aux) and \
-                             ('A' not in amg_flags) and ('P' not in amg_flags)
-            remove_t = (remove_transposons and 'T' not in amg_flags) or not remove_transposons
-            remove_f = (remove_fs and 'F' not in amg_flags) or not remove_fs
-            # remove_j = (remove_fs and 'J' not in amg_flags) or not remove_js
-            # if vmap_aux_check and remove_t and remove_f and remove_j:
-            if vmap_aux_check and remove_t and remove_f:
-                potential_amgs.append(gene)
-    return annotations.loc[potential_amgs]
+    amgs = annotations[((annotations['amg_flags'].str.contains('M')) &
+                          (annotations['amg_flags'].str.contains('V') == False) &
+                          (annotations['amg_flags'].str.contains('A') == False) &
+                          (annotations['amg_flags'].str.contains('P') == False) &
+                          (annotations['auxiliary_score'] <= max_aux)
+                           )]
+    if remove_transposons:
+        amgs = amgs[(amgs['amg_flags'].str.contains('T') == False)]
+    if remove_fs:
+        amgs = amgs[(amgs['amg_flags'].str.contains('F') == False)]
+    return amgs
 
 
 def get_strand_switches(strandedness):
@@ -107,14 +104,18 @@ def make_viral_stats_table(annotations, potential_amgs, groupby_column='scaffold
     return pd.DataFrame(viral_stats_series).fillna(0)
 
 
-def make_viral_distillate(potential_amgs, genome_summary_frame):
+def make_viral_distillate(potential_amgs, genome_summary_form):
     rows = list()
     potential_amgs['ids'] = get_ids_from_annotations_by_row(potential_amgs)
+    potential_amgs.iloc[0]
+    logger =  logging.getLogger()
+    check_columns(potential_amgs, logger)
+    missing_count = 0
     for gene, row in potential_amgs.iterrows():
-        gene_ids = row.ids & set(genome_summary_frame.index)
+        gene_ids = row.ids & set(genome_summary_form.index)
         if len(gene_ids) > 0:
             for gene_id in gene_ids:
-                gene_summary = genome_summary_frame.loc[gene_id]
+                gene_summary = genome_summary_form.loc[gene_id]
                 if type(gene_summary) is pd.Series:
                     rows.append([gene, row['scaffold'], gene_id, gene_summary['gene_description'],
                                  gene_summary['sheet'], gene_summary['header'], gene_summary['subheader'],
@@ -152,16 +153,16 @@ def make_amg_count_column(potential_amgs, vgf_order=None):
     return text
 
 
-def make_viral_functional_df(annotations, genome_summary_frame, groupby_column='scaffold'):
+def make_viral_functional_df(annotations, genome_summary_form, groupby_column='scaffold'):
     # build dict of ids per genome
     vgf_to_id_dict = defaultdict(defaultdict_list)
     for vgf, frame in annotations.groupby(groupby_column, sort=False):
-        for gene, id_list in get_ids_from_annotations_by_row(frame).iteritems():
+        for gene, id_list in get_ids_from_annotations_by_row(frame).items():
             for id_ in id_list:
                 vgf_to_id_dict[vgf][id_].append(gene)
     # build long from data frame
     rows = list()
-    for category, category_frame in genome_summary_frame.groupby('sheet'):
+    for category, category_frame in genome_summary_form.groupby('sheet'):
         for header, header_frame in category_frame.groupby('module'):
             header_id_set = set(header_frame.index.to_list())
             curr_rows = list()
@@ -215,12 +216,12 @@ def make_viral_functional_heatmap(functional_df, vgf_order=None):
 
 
 def summarize_vgfs(input_file, output_dir, groupby_column='scaffold', max_auxiliary_score=3,
-                   remove_transposons=False, remove_fs=False, custom_distillate=None, log_file_path:str=None):
+                   remove_transposons=False, remove_fs=False, custom_distillate=None,
+                   log_file_path:str=None, config_loc=None):
     # make output folder
-    
     mkdir(output_dir)
     if log_file_path is None:
-        log_file_path = path.join(output_dir, "Distillation.log")
+        log_file_path = path.join(output_dir, "distill.log")
     logger = logging.getLogger('distillation_log')
     setup_logger(logger, log_file_path)
     logger.info(f"The log file is created at {log_file_path}")
@@ -228,8 +229,7 @@ def summarize_vgfs(input_file, output_dir, groupby_column='scaffold', max_auxili
 
     # set up
     annotations = pd.read_csv(input_file, sep='\t', index_col=0).fillna('')
-    check_columns(annotations, logger)
-    database_handler = DatabaseHandler(logger)
+    database_handler = DatabaseHandler(logger, config_loc=config_loc)
     if database_handler.config["dram_sheets"].get('genome_summary_form') is None:
         raise ValueError('Genome summary form location must be set in order to summarize genomes')
     genome_summary_form = pd.read_csv(database_handler.config['dram_sheets']['genome_summary_form'], sep='\t', index_col=0)
@@ -241,10 +241,9 @@ def summarize_vgfs(input_file, output_dir, groupby_column='scaffold', max_auxili
     logger.info('Retrieved database locations and descriptions')
 
     # get potential AMGs
-    # potential_amgs = filter_to_amgs(annotations.fillna(''), max_aux=max_auxiliary_score,
-    #                                 remove_transposons=remove_transposons, remove_fs=remove_fs, remove_js=remove_js)
     potential_amgs = filter_to_amgs(annotations, max_aux=max_auxiliary_score,
                                     remove_transposons=remove_transposons, remove_fs=remove_fs)
+    check_columns(potential_amgs, logger)
     logger.info('Determined potential amgs')
 
     # make distillate

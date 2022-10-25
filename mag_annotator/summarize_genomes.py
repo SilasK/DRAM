@@ -24,13 +24,13 @@ from mag_annotator.sulfur_kit import NAME as SULFUR_NAME
 
 FRAME_COLUMNS = ['gene_id', 'gene_description', 'module', 'sheet', 'header', 'subheader']
 RRNA_TYPES = ['5S rRNA', '16S rRNA', '23S rRNA']
-HEATMAP_MODULES = ['M00001', 'M00004', 'M00008', 'M00009', 'M00012', 'M00165', 'M00173', 
+HEATMAP_MODULES = ['M00001', 'M00004', 'M00008', 'M00009', 'M00012', 'M00165', 'M00173',
                    'M00374', 'M00375', 'M00376', 'M00377', 'M00422', 'M00567']
 HEATMAP_CELL_HEIGHT = 10
 HEATMAP_CELL_WIDTH = 10
 KO_REGEX = r'^K\d\d\d\d\d$'
-ETC_COVERAGE_COLUMNS = ['module_id', 'module_name', 'complex', 'genome', 'path_length', 
-                        'path_length_coverage', 'percent_coverage', 'genes', 'missing_genes', 
+ETC_COVERAGE_COLUMNS = ['module_id', 'module_name', 'complex', 'genome', 'path_length',
+                        'path_length_coverage', 'percent_coverage', 'genes', 'missing_genes',
                         'complex_module_name']
 TAXONOMY_LEVELS = ['d', 'p', 'c', 'o', 'f', 'g', 's']
 COL_HEADER, COL_SUBHEADER, COL_MODULE, COL_GENE_ID, COL_GENE_DESCRIPTION = 'header', 'subheader', 'module', 'gene_id', 'gene_description'
@@ -38,22 +38,14 @@ CONSTANT_DISTILLATE_COLUMNS = [COL_GENE_ID, COL_GENE_DESCRIPTION, COL_MODULE, CO
 DISTILATE_SORT_ORDER_COLUMNS = [COL_HEADER, COL_SUBHEADER, COL_MODULE, COL_GENE_ID]
 EXCEL_MAX_CELL_SIZE = 32767
 
-ID_FUNCTION_DICT = { 
+ID_FUNCTION_DICT = {
     'kegg_genes_id': lambda x: [x],
     'ko_id': lambda x: [j for j in x.split(',')],
     'kegg_id': lambda x: [j for j in x.split(',')],
-    'kegg_hit': lambda x: [i[1:-1] for i in 
+    'kegg_hit': lambda x: [i[1:-1] for i in
                            re.findall(r'\[EC:\d*.\d*.\d*.\d*\]', x)],
     'peptidase_family': lambda x: [j for j in x.split(';')],
-    'cazy_ids': lambda x: [i.split('_')[0] for i in x.split('; ')],
-    'cazy_id': lambda x: [i.split('_')[0] for i in x.split('; ')],
-    'cazy_hits': lambda x: [f"{i[1:3]}:{i[4:-1]}" for i in 
-                            re.findall(r'\(EC [\d+\.]+[\d-]\)', x)
-                            ] + [
-                            i[1:-1].split('_')[0] 
-                            for i in re.findall(r'\[[A-Z]*\d*?\]', x)],
-    'cazy_subfam_ec': lambda x: [f"EC:{i}" for i in 
-                                 re.findall(r'[\d+\.]+[\d-]', x)],
+    'cazy_best_hit': lambda x: [x.split('_')[0]],
     'pfam_hits': lambda x: [j[1:-1].split('.')[0]
                             for j in re.findall(r'\[PF\d\d\d\d\d.\d*\]', x)],
     'camper_id': lambda x: [x],
@@ -268,7 +260,7 @@ def make_genome_stats(annotations, rrna_frame=None, trna_frame=None, groupby_col
                     has_rrna.append(False)
         if trna_frame is not None:
             # TODO: remove psuedo from count?
-            row.append(trna_frame.loc[trna_frame[groupby_column] == genome].shape[0])  
+            row.append(trna_frame.loc[trna_frame[groupby_column] == genome].shape[0])
         if 'assembly quality' in columns:
             if frame['bin_completeness'][0] > 90 and frame['bin_contamination'][0] < 5 and np.all(has_rrna) and \
                len(set(trna_frame.loc[trna_frame[groupby_column] == genome].Type)) >= 18:
@@ -627,13 +619,13 @@ def make_strings_no_repeats(genome_taxa_dict):
     return labels
 
 
-def summarize_genomes(input_file, trna_path=None, rrna_path=None, output_dir='.', 
+def summarize_genomes(input_file, trna_path=None, rrna_path=None, output_dir='.',
                       groupby_column='fasta', log_file_path=None, custom_distillate=None,
-                      distillate_gene_names=False, genomes_per_product=1000):
+                      distillate_gene_names=False, genomes_per_product=1000, config_loc=None):
     # make output folder
     mkdir(output_dir)
     if log_file_path is None:
-        log_file_path = path.join(output_dir, "Distillation.log")
+        log_file_path = path.join(output_dir, "distill.log")
     logger = logging.getLogger('distillation_log')
     setup_logger(logger, log_file_path)
     logger.info(f"The log file is created at {log_file_path}")
@@ -656,7 +648,7 @@ def summarize_genomes(input_file, trna_path=None, rrna_path=None, output_dir='.'
         rrna_frame = pd.read_csv(rrna_path, sep='\t')
 
     # get db_locs and read in dbs
-    database_handler = DatabaseHandler(logger)
+    database_handler = DatabaseHandler(logger, config_loc=config_loc)
     if 'genome_summary_form' not in database_handler.config["dram_sheets"]:
         raise ValueError('Genome summary form location must be set in order to summarize genomes')
     if 'module_step_form' not in database_handler.config["dram_sheets"]:
@@ -672,8 +664,8 @@ def summarize_genomes(input_file, trna_path=None, rrna_path=None, output_dir='.'
         if 'camper_distillate' not in database_handler.config["dram_sheets"]:
             raise ValueError(f"Genome summary form location for {CAMPER_NAME} "
                              "must be set in order to summarize genomes with this database.")
-        genome_summary_form = pd.concat([ 
-            genome_summary_form, 
+        genome_summary_form = pd.concat([
+            genome_summary_form,
             pd.read_csv(database_handler.config["dram_sheets"]['camper_distillate'], sep='\t')])
     if f"{FEGENIE_NAME}_id" in annotations:
         if 'fegenie_distillate' not in database_handler.config["dram_sheets"]:
@@ -761,7 +753,6 @@ def summarize_genomes(input_file, trna_path=None, rrna_path=None, output_dir='.'
             groupby_column=groupby_column)
         liquor_df = make_liquor_df(module_coverage_df, etc_coverage_df, function_df)
         liquor = make_liquor_heatmap(module_coverage_df, etc_coverage_df, function_df, genome_order, None)
-        liquor = make_liquor_heatmap(module_coverage_df, etc_coverage_df, function_df, genome_order, labels)
         liquor.save(path.join(output_dir, 'product.html'))
     liquor_df.to_csv(path.join(output_dir, 'product.tsv'), sep='\t')
     logger.info('Generated product heatmap and table')

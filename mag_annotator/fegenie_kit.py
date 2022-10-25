@@ -43,7 +43,7 @@ def process(input_file, output_dir, logger, threads=1,  version=VERSION, verbose
     temp_dir = path.dirname(input_file)
     # this is the path within the tar file
     tar_paths ={
-        "fegenie_hmm":     [path.join(f"{NAME}-{version}", "iron", "iron_oxidation"), 
+        "fegenie_hmm":     [path.join(f"{NAME}-{version}", "iron", "iron_oxidation"),
                             path.join(f"{NAME}-{version}", "iron", "iron_reduction")],
         "fegenie_cutoffs": path.join(f"{NAME}-{version}", "iron", "HMM-bitcutoffs.txt")
     }
@@ -60,13 +60,13 @@ def process(input_file, output_dir, logger, threads=1,  version=VERSION, verbose
             tid = info.name
             if any([tid.startswith(i) for i in  tar_paths["fegenie_hmm"]]) and tid.endswith('hmm'):
                 tar.extract(tid, temp_dir)
-    
+
     # move and concatanate hmm to location
     if not path.exists(path.dirname(final_paths['fegenie_hmm'])):
         mkdir(path.dirname(final_paths['fegenie_hmm']))
 
     hmm_paths = [i for j in  tar_paths['fegenie_hmm'] for i in glob(path.join(temp_dir, j, '*.hmm'))]
-    hmm_names = set() 
+    hmm_names = set()
     with open(final_paths['fegenie_hmm'], 'wb') as wfd:
         for f in hmm_paths:
             if path.basename(f) not in hmm_names:
@@ -76,7 +76,7 @@ def process(input_file, output_dir, logger, threads=1,  version=VERSION, verbose
 
     # move the cutoffs
     move(path.join(temp_dir, tar_paths["fegenie_cutoffs"]), final_paths["fegenie_cutoffs"])
-    
+
     # build dbs
     run_process(['hmmpress', '-f', final_paths["fegenie_hmm"]], logger, verbose=verbose)  # all are pressed just in case
     return final_paths
@@ -86,7 +86,7 @@ def sig_scores(hits:pd.DataFrame, score_db:pd.DataFrame) -> pd.DataFrame:
     """
     This is a custom sig_scores function for FeGenie, it usese soft_bitscore_cutoff
     as a bit score cutoffs, given the name I am not shure that is corect.
-    
+
     Also, I use full score, is that corect?
     """
     data = pd.merge(hits, score_db, how='left', left_on='target_id', right_index=True)
@@ -112,8 +112,8 @@ def hmmscan_formater(hits:pd.DataFrame,  db_name:str, hmm_info_path:str=None, to
     return hits_df
 
 
-def search(genes_faa:str, tmp_dir:str, fegenie_hmm:str, fegenie_cutoffs:str, 
-           logger:logging.Logger, threads:int, db_name:str=NAME, top_hit:bool=True, 
+def search(genes_faa:str, tmp_dir:str, fegenie_hmm:str, fegenie_cutoffs:str,
+           logger:logging.Logger, threads:int, db_name:str=NAME, top_hit:bool=True,
            verbose:bool=True):
     return run_hmmscan(genes_faa=genes_faa,
                        db_loc=fegenie_hmm,

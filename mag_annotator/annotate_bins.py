@@ -792,7 +792,8 @@ def annotate_orfs(gene_faa, db_handler, tmp_dir, logger, custom_db_locs=(), cust
                                            formater=partial(
                                                vogdb_hmmscan_formater,
                                                db_name='vogdb',
-                                               db_handler=db_handler
+                                               db_handler=db_handler,
+                                               logger=logger
                                            ),
                                            logger=logger))
     for db_name, db_loc in custom_db_locs.items():
